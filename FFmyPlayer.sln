@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FFmyPlayer", "FFmyPlayer.vcxproj", "{8DA4FA0D-E430-3BDA-9524-6ECD323CEC96}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8DA4FA0D-E430-3BDA-9524-6ECD323CEC96}.Debug|x64.ActiveCfg = Debug|x64
+		{8DA4FA0D-E430-3BDA-9524-6ECD323CEC96}.Debug|x64.Build.0 = Debug|x64
+		{8DA4FA0D-E430-3BDA-9524-6ECD323CEC96}.Release|x64.ActiveCfg = Release|x64
+		{8DA4FA0D-E430-3BDA-9524-6ECD323CEC96}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A6F2D5DD-B895-41EB-A8EB-B25DF6BEC35E}
+	EndGlobalSection
+EndGlobal

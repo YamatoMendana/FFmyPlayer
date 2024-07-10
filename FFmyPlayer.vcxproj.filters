@@ -1,16 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Form Files">
-      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
-      <Extensions>ui</Extensions>
-      <ParseFiles>false</ParseFiles>
-    </Filter>
-    <Filter Include="Form Files">
-      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
-      <Extensions>ui</Extensions>
-      <ParseFiles>false</ParseFiles>
-    </Filter>
     <Filter Include="Generated Files">
       <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
@@ -37,6 +27,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\MainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="test\avio_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,20 +51,26 @@
     <ClCompile Include="test\libavutiltest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="test\live_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mainwindow.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test\remuxertest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test\live_test.cpp">
+    <ClCompile Include="src\title_bar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerWidget.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\MainWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavcodec\ac3_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -324,6 +323,9 @@
     <ClInclude Include="test\libavutiltest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test\live_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -333,9 +335,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <QtMoc Include="include\mainwindow.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <ClInclude Include="third\ffmpeg\include\libavutil\mastering_display_metadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -435,6 +434,9 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\timestamp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <QtMoc Include="include\title_bar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <ClInclude Include="third\ffmpeg\include\libavutil\tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -510,7 +512,7 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\xvmc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test\live_test.h">
+    <ClInclude Include="include\playerWidget.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -521,10 +523,5 @@
     <CustomBuild Include="release\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <QtUic Include="ui\mainwindow.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
   </ItemGroup>
 </Project>

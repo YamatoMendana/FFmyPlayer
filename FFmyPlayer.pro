@@ -47,8 +47,10 @@ LIBS += \
     -lswscale
 }
 SOURCES += \
+    src/MainWindow.cpp \
     src/main.cpp \
-    src/mainwindow.cpp \
+    src/title_bar.cpp \
+    src/playerWidget.cpp \
     test/avio_file.cpp \
     test/avio_reading.cpp \
     test/demuxer_test.cpp \
@@ -60,7 +62,10 @@ SOURCES += \
     test/live_test.cpp
 
 HEADERS += \
-    include/mainwindow.h \
+    include/MainWindow.h \
+    include/StyleSheet.h \
+    include/title_bar.h \
+    include/playerWidget.h \
     test/avio_file.h \
     test/avio_reading.h \
     test/demuxer_test.h \
@@ -208,8 +213,7 @@ HEADERS += \
     third/ffmpeg/include/libswscale/version.h \
     third/ffmpeg/include/libswscale/version_major.h
 
-FORMS += \
-    ui/mainwindow.ui
+FORMS +=
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

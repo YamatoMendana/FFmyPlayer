@@ -258,7 +258,22 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 		left_Corner_MouseChange_Rect = QRect(this->x(), this->y() + this->height() - cornerX, cornerX, cornerY);
 		//右上角 拉伸图标区域
 		right_Corner_MouseChange_Rect = QRect(this->x() + this->width() - cornerX, this->y() + this->height() - cornerY, cornerX, cornerY);
-		
+
+	}
+	break;
+	case QEvent::Move:
+	{
+		//左边 拉伸图标区域
+		left_MouseChange_Rect = QRect(this->x(), this->y() + cornerY, cornerX, this->height() - (cornerX + cornerY));
+		//右边 拉伸图标区域
+		right_MouseChange_Rect = QRect(this->x() + this->width() - cornerX, this->y() + cornerY, cornerX, this->height() - (cornerX + cornerY));
+		//下方 拉伸图标区域
+		bottom_MouseChange_Rect = QRect(this->x() + cornerX, this->y() + this->height() - cornerY, this->width() - (cornerX + cornerY), cornerY);
+		//左上角 拉伸图标区域
+		left_Corner_MouseChange_Rect = QRect(this->x(), this->y() + this->height() - cornerX, cornerX, cornerY);
+		//右上角 拉伸图标区域
+		right_Corner_MouseChange_Rect = QRect(this->x() + this->width() - cornerX, this->y() + this->height() - cornerY, cornerX, cornerY);
+
 	}
 	break;
 	}

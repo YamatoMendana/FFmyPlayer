@@ -137,6 +137,7 @@ void TitleBar::mouseMoveEvent(QMouseEvent* event)
 			pWid->move(movePot);
 		}
 	}
+
 }
 
 void TitleBar::mouseReleaseEvent(QMouseEvent* event)

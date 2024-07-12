@@ -10,6 +10,8 @@ public:
 	explicit PlayerWidget(QWidget* parent = nullptr);
 	~PlayerWidget();
 
+protected:
+	bool eventFilter(QObject* obj, QEvent* event);
 };
 
 

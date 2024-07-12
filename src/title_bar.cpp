@@ -186,12 +186,10 @@ bool TitleBar::eventFilter(QObject* obj, QEvent* event)
 			if (pZoom_bt->property("ZoomProperty") == "向下还原")
 			{
 				pZoom_bt->setIcon(QIcon("ui/RestoreWindow_hover.png"));
-				qDebug() << "enter pZoom_bt set RestoreWindow_hover";
 			}
 			else
 			{
 				pZoom_bt->setIcon(QIcon("ui/maximizeWindow_hover.png"));
-				qDebug() << "enter pZoom_bt set maximizeWindow_hover";
 			}
 		}
 		else if (obj == pClose_bt)
@@ -214,13 +212,11 @@ bool TitleBar::eventFilter(QObject* obj, QEvent* event)
 			if (pZoom_bt->property("ZoomProperty") == "向下还原")
 			{
 				pZoom_bt->setIcon(QIcon("ui/RestoreWindow.png"));
-				qDebug() << "leave pZoom_bt set RestoreWindow";
 
 			}
 			else
 			{
 				pZoom_bt->setIcon(QIcon("ui/maximizeWindow.png"));
-				qDebug() << "leave pZoom_bt set maximizeWindow";
 
 			}
 		}

@@ -12,6 +12,10 @@ DEFINES += QT_DEPRECATED_WARNINGS \
             __STDC_FORMAT_MACROS   \
 #            D__STDC_FORMAT_MACROS
 
+TRANSLATIONS += chinese.ts \
+                english.ts
+
+CODECFORTR = UTF-8
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -49,6 +53,9 @@ LIBS += \
 SOURCES += \
     src/MainWindow.cpp \
     src/main.cpp \
+    src/playerCtlButtons.cpp \
+    src/playerCtlWidget.cpp \
+    src/playingInfo.cpp \
     src/title_bar.cpp \
     src/playerWidget.cpp \
     test/avio_file.cpp \
@@ -64,8 +71,11 @@ SOURCES += \
 HEADERS += \
     include/MainWindow.h \
     include/StyleSheet.h \
+    include/playerCtlButtons.h \
+    include/playingInfo.h \
     include/title_bar.h \
     include/playerWidget.h \
+    include/playerCtlWidget.h \
     test/avio_file.h \
     test/avio_reading.h \
     test/demuxer_test.h \

@@ -27,9 +27,6 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 	QDesktopWidget* desktop = QApplication::desktop();
 	m_availableWindowRect = QRect(desktop->availableGeometry());
 
-    QVBoxLayout* pVlayout = new QVBoxLayout();
-
-
     pTitleBar = new TitleBar(this);
     pTitleBar->resize(this->width(), 30);
     installEventFilter(pTitleBar);
@@ -37,12 +34,19 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
     //设置窗口标题
     setWindowTitle("FFmyPlayer");
     //设置窗口图标
+	//something
     
     //创建播放窗口
     pPlayWidget = new PlayerWidget(this);
 
+
+	//创建播放控制按钮窗口
+	pPlayCtlWidget = new PlayerCtlWidget(this);
+
+	QVBoxLayout* pVlayout = new QVBoxLayout();
     pVlayout->addWidget(pTitleBar);
     pVlayout->addWidget(pPlayWidget);
+	pVlayout->addWidget(pPlayCtlWidget);
     pVlayout->setContentsMargins(5, 5, 5, 5);
     this->setLayout(pVlayout);
 
@@ -249,9 +253,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 	case QEvent::Resize:
 	{
 		//左边 拉伸图标区域
-		left_MouseChange_Rect = QRect(this->x(), this->y() + cornerY, cornerX, this->height() - (cornerX + cornerY));
+		left_MouseChange_Rect = QRect(this->x(), this->y() + 25, cornerX, this->height() - (cornerX + cornerY));
 		//右边 拉伸图标区域
-		right_MouseChange_Rect = QRect(this->x() + this->width() - cornerX, this->y() + cornerY, cornerX, this->height() - (cornerX + cornerY));
+		right_MouseChange_Rect = QRect(this->x() + this->width() - cornerX, this->y() + 25, cornerX, this->height() - (cornerX + cornerY));
 		//下方 拉伸图标区域
 		bottom_MouseChange_Rect = QRect(this->x() + cornerX, this->y() + this->height() - cornerY, this->width() - (cornerX + cornerY), cornerY);
 		//左上角 拉伸图标区域

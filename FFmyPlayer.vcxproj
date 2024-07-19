@@ -172,7 +172,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\MainWindow.cpp" />
+    <ClCompile Include="src\playerCtlButtons.cpp" />
+    <ClCompile Include="src\playerCtlWidget.cpp" />
     <ClCompile Include="src\playerWidget.cpp" />
+    <ClCompile Include="src\playingInfo.cpp" />
     <ClCompile Include="test\avio_file.cpp" />
     <ClCompile Include="test\avio_reading.cpp" />
     <ClCompile Include="test\demuxer_test.cpp" />
@@ -187,7 +190,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\MainWindow.h" />
+    <ClInclude Include="include\playerCtlButtons.h" />
+    <ClInclude Include="include\playerCtlWidget.h" />
     <ClInclude Include="include\playerWidget.h" />
+    <ClInclude Include="include\playingInfo.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\ac3_parser.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\adler32.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\adts_parser.h" />

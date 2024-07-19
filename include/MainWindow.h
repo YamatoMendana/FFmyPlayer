@@ -5,10 +5,12 @@
 
 #include "title_bar.h"
 #include "playerWidget.h"
+#include "playerCtlWidget.h"
 
 
 class MainWindow:public QWidget
 {
+    //Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
@@ -25,6 +27,7 @@ protected:
 private:
     TitleBar* pTitleBar;
     PlayerWidget* pPlayWidget;
+    PlayerCtlWidget* pPlayCtlWidget;
 
     int mousePosX = 0;
     int mousePosY = 0;

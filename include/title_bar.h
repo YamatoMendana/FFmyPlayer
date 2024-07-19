@@ -6,7 +6,7 @@
 #include <QPushButton>
 #include <QLabel>
 
-
+#pragma execution_character_set("utf-8")
 
 class TitleBar:public QWidget
 {
@@ -14,6 +14,8 @@ class TitleBar:public QWidget
 public:
     explicit TitleBar(QWidget *parent = nullptr);
     ~TitleBar();
+
+    void setTitleText(QString str);
 
 protected:
     void mouseDoubleClickEvent(QMouseEvent* event);

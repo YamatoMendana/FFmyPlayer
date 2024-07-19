@@ -1,4 +1,4 @@
-#include "playerWidget.h"
+﻿#include "playerWidget.h"
 
 #include <QEvent>
 #include <QMouseEvent>

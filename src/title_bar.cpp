@@ -11,6 +11,8 @@ TitleBar::TitleBar(QWidget* parent /*= nullptr*/) : QWidget(parent)
 {
 	this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
 	this->setFixedHeight(30);
+	//指示小部件应该使用有样式的背景绘制。
+	this->setAttribute(Qt::WA_StyledBackground, true);
 
 	//控件初始化
 	pMinimize_bt = new QPushButton(this);
@@ -71,7 +73,7 @@ TitleBar::TitleBar(QWidget* parent /*= nullptr*/) : QWidget(parent)
 	//图片自适应控件大小
 	pIcon->setFixedSize(20, 20);
 	//配置图标
-
+	//something
 	pIcon->setScaledContents(true);
 
 	//标题栏大小
@@ -102,6 +104,11 @@ TitleBar::TitleBar(QWidget* parent /*= nullptr*/) : QWidget(parent)
 TitleBar::~TitleBar()
 {
 
+}
+
+void TitleBar::setTitleText(QString str)
+{
+	pTitle->setText(str);
 }
 
 void TitleBar::mouseDoubleClickEvent(QMouseEvent* event)

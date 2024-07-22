@@ -2,6 +2,7 @@
 
 #include <QHBoxLayout>
 #include <QDebug>
+#include <QFileDialog>
 
 #include "StyleSheet.h"
 
@@ -69,6 +70,11 @@ PlayerCtlButtons::PlayerCtlButtons(QWidget* parent /*= nullptr*/)
 	pPrevEpisodeButton->setFixedSize(40, 40);
 	pNextEpisodeButton->setFixedSize(40, 40);
 	pOpenFileButton->setFixedSize(40, 40);
+
+	connect(pPlayButton, &QPushButton::clicked, this, &PlayerCtlButtons::Play_clicked);
+	connect(pPlayButton, &QPushButton::clicked, this, &PlayerCtlButtons::Pause_clicked);
+	connect(pStopButton, &QPushButton::clicked, this, &PlayerCtlButtons::Stop_clicked);
+	connect(pOpenFileButton, &QPushButton::clicked, this, &PlayerCtlButtons::Open_clicked);
 }
 
 PlayerCtlButtons::~PlayerCtlButtons()
@@ -76,4 +82,54 @@ PlayerCtlButtons::~PlayerCtlButtons()
 
 }
 
+void PlayerCtlButtons::Play_clicked()
+{
+
+}
+
+void PlayerCtlButtons::Pause_clicked()
+{
+
+}
+
+void PlayerCtlButtons::Stop_clicked()
+{
+
+}
+
+void PlayerCtlButtons::Open_clicked()
+{
+	strSupportVideoList = "*.avi,*.mp4,*.rmvb,*.mov,*.mkv,*.flv,*.ts";
+	strSupportAudioList = "*.wav,*.mp3,*.aac,*.flac";
+	strSupportListFile = "*.m3u,*.m3u8";
+	strSupportAllList = strSupportVideoList + strSupportAudioList + strSupportListFile;
+	QString strFilter = QString("支持的所有文件(%1);;视频文件(%2);;音频文件(%3);;播放列表文件(%4);;所有文件(*.*)")
+		.arg(strSupportAllList)
+		.arg(strSupportVideoList)
+		.arg(strSupportAudioList)
+		.arg(strSupportListFile);
+
+	QStringList filePaths = QFileDialog::getOpenFileNames(this,
+		tr("Open File"),
+		".", 
+		tr(strFilter.toStdString().c_str())
+	);
+
+	if (!filePaths.isEmpty())
+	{
+		for (auto filePath : filePaths)
+		{
+			if (!filePath.isNull())
+			{
+				//播放文件
+
+				//获取文件名
+				QString filename = filePath.left(filePath.lastIndexOf("/") + 1);
+				//添加到播放列表
+
+			}
+		}
+	}
+
+}
 

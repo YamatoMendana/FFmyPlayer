@@ -14,7 +14,12 @@ public:
 	~PlayerCtlButtons();
 
 protected:
-	
+
+private slots:
+	void Play_clicked();
+	void Pause_clicked();
+	void Stop_clicked();
+	void Open_clicked();
 
 private:
 	//播放按钮
@@ -28,6 +33,10 @@ private:
 	//打开文件按钮
 	QPushButton* pOpenFileButton = nullptr;
 
+	QString strSupportVideoList;
+	QString strSupportAudioList;
+	QString strSupportListFile;
+	QString strSupportAllList;
 };
 
 #endif //__PLAYERCTLBUTTON_H__

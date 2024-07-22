@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QMenu>
 
 #pragma execution_character_set("utf-8")
 
@@ -34,11 +35,13 @@ private:
     //缩放按钮
     QPushButton* pZoom_bt = nullptr;
     //关闭按钮
-    QPushButton* pClose_bt=nullptr;
+    QPushButton* pClose_bt = nullptr;
+    //菜单按钮
+    QPushButton* pMenu_bt = nullptr;
     //标题栏
     QLabel* pTitle = nullptr;
-    //图标栏
-    QLabel* pIcon = nullptr;
+    //菜单栏
+    QMenu* pMenu = nullptr;
     //鼠标按下时的位置
 	QPoint m_mousePosition; 
     //鼠标是否摁下

@@ -2,6 +2,8 @@
 #define __PLAYINGINFO_H__
 
 #include <QWidget>
+#include <QLabel>
+#include <QLineEdit>
 
 class PlayingInfo :public QWidget
 {
@@ -11,6 +13,12 @@ public:
 	~PlayingInfo();
 
 
+private:
+	QLineEdit* pPlayingTimeLabel;
+	QLineEdit* pPlayTotalTimeLabel;
+	QLabel* pSplitterLabel;
+	
+	
 };
 
 

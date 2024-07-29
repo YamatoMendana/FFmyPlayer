@@ -12,13 +12,7 @@ public:
 	~PlayerWidget();
 
 protected:
-	void paintEvent(QPaintEvent* event);
 	bool eventFilter(QObject* obj, QEvent* event);
-
-private:
-	bool isKeepAspectRatio = true;
-
-	QImage m_image;
 };
 
 

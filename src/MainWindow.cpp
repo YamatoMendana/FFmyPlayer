@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 {
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
     QSize m_size(1280,720);
-    this->setMinimumSize(m_size);
+    this->resize(m_size);
     this->setObjectName("MainWidget");
     this->setStyleSheet(MainWidget_SS);
 	//鼠标追踪
@@ -241,8 +241,6 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	m_bMoveFlagRDY = false;
 	m_bDragging = false;
 	this->setCursor(Qt::ArrowCursor);
-
-	qDebug() << "mouseReleaseEvent";
 
 }
 

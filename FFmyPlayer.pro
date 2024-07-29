@@ -21,6 +21,7 @@ CODECFORTR = UTF-8
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 INCLUDEPATH += $$PWD/third/ffmpeg/include   \
+               $$PWD/third/SDL2/include \
                $$PWD/include    \
                $$PWD/test
 
@@ -37,7 +38,9 @@ LIBS += -L$$PWD/third/ffmpeg/lib \
         -lavformat \
         -lavutil \
         -lswresample \
-        -lswscale
+        -lswscale   \
+        -L$$PWD/third/SDL2/lib/x64  \
+        -lSDL2
 }
 unix {
 LIBS += \
@@ -48,13 +51,16 @@ LIBS += \
     -lavformat \
     -lavutil \
     -lswresample \
-    -lswscale
+    -lswscale   \
+    -lSDL2
 }
 SOURCES += \
     src/MainWindow.cpp \
+    src/avPacketQueue.cpp \
     src/main.cpp \
     src/playerCtlButtons.cpp \
     src/playerCtlWidget.cpp \
+    src/playerManager.cpp \
     src/playingInfo.cpp \
     src/title_bar.cpp \
     src/playerWidget.cpp \
@@ -71,11 +77,13 @@ SOURCES += \
 HEADERS += \
     include/MainWindow.h \
     include/StyleSheet.h \
+    include/avPacketQueue.h \
     include/playerCtlButtons.h \
+    include/playerCtlWidget.h \
+    include/playerManager.h \
+    include/playerWidget.h \
     include/playingInfo.h \
     include/title_bar.h \
-    include/playerWidget.h \
-    include/playerCtlWidget.h \
     test/avio_file.h \
     test/avio_reading.h \
     test/demuxer_test.h \
@@ -84,6 +92,84 @@ HEADERS += \
     test/libavutiltest.h \
     test/remuxertest.h \
     test/live_test.h \
+    third/SDL2/include/SDL.h \
+    third/SDL2/include/SDL_assert.h \
+    third/SDL2/include/SDL_atomic.h \
+    third/SDL2/include/SDL_audio.h \
+    third/SDL2/include/SDL_bits.h \
+    third/SDL2/include/SDL_blendmode.h \
+    third/SDL2/include/SDL_clipboard.h \
+    third/SDL2/include/SDL_config.h \
+    third/SDL2/include/SDL_cpuinfo.h \
+    third/SDL2/include/SDL_egl.h \
+    third/SDL2/include/SDL_endian.h \
+    third/SDL2/include/SDL_error.h \
+    third/SDL2/include/SDL_events.h \
+    third/SDL2/include/SDL_filesystem.h \
+    third/SDL2/include/SDL_gamecontroller.h \
+    third/SDL2/include/SDL_gesture.h \
+    third/SDL2/include/SDL_guid.h \
+    third/SDL2/include/SDL_haptic.h \
+    third/SDL2/include/SDL_hidapi.h \
+    third/SDL2/include/SDL_hints.h \
+    third/SDL2/include/SDL_joystick.h \
+    third/SDL2/include/SDL_keyboard.h \
+    third/SDL2/include/SDL_keycode.h \
+    third/SDL2/include/SDL_loadso.h \
+    third/SDL2/include/SDL_locale.h \
+    third/SDL2/include/SDL_log.h \
+    third/SDL2/include/SDL_main.h \
+    third/SDL2/include/SDL_messagebox.h \
+    third/SDL2/include/SDL_metal.h \
+    third/SDL2/include/SDL_misc.h \
+    third/SDL2/include/SDL_mouse.h \
+    third/SDL2/include/SDL_mutex.h \
+    third/SDL2/include/SDL_name.h \
+    third/SDL2/include/SDL_opengl.h \
+    third/SDL2/include/SDL_opengl_glext.h \
+    third/SDL2/include/SDL_opengles.h \
+    third/SDL2/include/SDL_opengles2.h \
+    third/SDL2/include/SDL_opengles2_gl2.h \
+    third/SDL2/include/SDL_opengles2_gl2ext.h \
+    third/SDL2/include/SDL_opengles2_gl2platform.h \
+    third/SDL2/include/SDL_opengles2_khrplatform.h \
+    third/SDL2/include/SDL_pixels.h \
+    third/SDL2/include/SDL_platform.h \
+    third/SDL2/include/SDL_power.h \
+    third/SDL2/include/SDL_quit.h \
+    third/SDL2/include/SDL_rect.h \
+    third/SDL2/include/SDL_render.h \
+    third/SDL2/include/SDL_revision.h \
+    third/SDL2/include/SDL_rwops.h \
+    third/SDL2/include/SDL_scancode.h \
+    third/SDL2/include/SDL_sensor.h \
+    third/SDL2/include/SDL_shape.h \
+    third/SDL2/include/SDL_stdinc.h \
+    third/SDL2/include/SDL_surface.h \
+    third/SDL2/include/SDL_system.h \
+    third/SDL2/include/SDL_syswm.h \
+    third/SDL2/include/SDL_test.h \
+    third/SDL2/include/SDL_test_assert.h \
+    third/SDL2/include/SDL_test_common.h \
+    third/SDL2/include/SDL_test_compare.h \
+    third/SDL2/include/SDL_test_crc32.h \
+    third/SDL2/include/SDL_test_font.h \
+    third/SDL2/include/SDL_test_fuzzer.h \
+    third/SDL2/include/SDL_test_harness.h \
+    third/SDL2/include/SDL_test_images.h \
+    third/SDL2/include/SDL_test_log.h \
+    third/SDL2/include/SDL_test_md5.h \
+    third/SDL2/include/SDL_test_memory.h \
+    third/SDL2/include/SDL_test_random.h \
+    third/SDL2/include/SDL_thread.h \
+    third/SDL2/include/SDL_timer.h \
+    third/SDL2/include/SDL_touch.h \
+    third/SDL2/include/SDL_types.h \
+    third/SDL2/include/SDL_version.h \
+    third/SDL2/include/SDL_video.h \
+    third/SDL2/include/SDL_vulkan.h \
+    third/SDL2/include/begin_code.h \
+    third/SDL2/include/close_code.h \
     third/ffmpeg/include/libavcodec/ac3_parser.h \
     third/ffmpeg/include/libavcodec/adts_parser.h \
     third/ffmpeg/include/libavcodec/avcodec.h \

@@ -171,10 +171,13 @@
     </QtMoc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\playerClock.cpp" />
     <ClCompile Include="src\decoder.cpp" />
     <ClCompile Include="src\avFrameList.cpp" />
     <ClCompile Include="src\MainWindow.cpp" />
     <ClCompile Include="src\avPacketList.cpp" />
+    <ClCompile Include="src\playerDisplay.cpp" />
+    <ClCompile Include="src\SDL_Widget.cpp" />
     <ClCompile Include="test\avio_file.cpp" />
     <ClCompile Include="test\avio_reading.cpp" />
     <ClCompile Include="test\demuxer_test.cpp" />
@@ -194,9 +197,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\avFrameList.h" />
+    <ClInclude Include="include\playerClock.h" />
     <ClInclude Include="include\decoder.h" />
-    <ClInclude Include="include\globalStruct.h" />
+    <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\MainWindow.h" />
+    <ClInclude Include="include\playerDisplay.h" />
+    <ClInclude Include="include\SDL_Widget.h" />
     <ClInclude Include="third\SDL2\include\SDL.h" />
     <ClInclude Include="third\SDL2\include\SDL_assert.h" />
     <ClInclude Include="third\SDL2\include\SDL_atomic.h" />

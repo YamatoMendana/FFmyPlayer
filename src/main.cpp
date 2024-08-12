@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QTranslator>
+#include <signal.h>
 
 #include "MainWindow.h"
 
@@ -10,7 +11,10 @@
 #include "playerCtlButtons.h"
 
 
-
+static void sigterm_handler(int sig)
+{
+	exit(123);
+}
 extern "C"
 {
 
@@ -25,6 +29,9 @@ UseingLanguage g_enLanguage;
 
 int main(int argc, char *argv[])
 {
+	signal(SIGINT, sigterm_handler); /* Interrupt (ANSI).    */
+	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
+
     QApplication a(argc, argv);
     //翻译
     QTranslator* trans = new QTranslator();

@@ -2,7 +2,7 @@
 #define __DECODER_H__
 
 #include "SDL.h"
-#include "avFrameList.h"
+#include "AvFrameList.h"
 #include "avPacketList.h"
 
 extern "C"
@@ -17,15 +17,18 @@ public:
 	~Decoder();
 	int decoder_init(AVCodecContext* avctx, AvPacketList* queue, SDL_cond* empty_queue_cond);
 
-	void decoder_destroy(Decoder* d);
+	void decoder_destroy();
 	int decoder_decode_frame(AVFrame* frame, AVSubtitle* sub);
+	void decoder_abort(AvFrameList* frameList);
+	int decoder_start(int (*fn)(void*), const char* thread_name, void* arg);
 
-	void decoder_abort();
+	inline int get_finished() { return finished; }
+	inline int get_serial() { return pkt_serial; }
 
 private:
 	AVPacket* pkt = nullptr;
 	AvPacketList* pPktList = nullptr;
-	AVFrameList* pFmList = nullptr;
+	AvFrameList* pFmList = nullptr;
 	AVCodecContext* avctx = nullptr;
 	SDL_cond* empty_queue_cond = nullptr;
 	SDL_Thread* decoder_tid = nullptr;

@@ -1,21 +1,20 @@
 #ifndef __PLAYER_MANAGER_H__
 #define __PLAYER_MANAGER_H__
 
+#include <unordered_map>
+#include <functional>
+
 #include "SDL.h"
+#include "Common.h"
+#include "playerClock.h"
+#include "avFrameList.h"
+#include "avPacketList.h"
+#include "decoder.h"
+#include "SDL_Widget.h"
 
-extern "C"
-{
-#include "libavcodec/avcodec.h"
-#include "libavutil/pixfmt.h"
-#include "libavutil/opt.h"
-#include "libavutil/imgutils.h"
-#include "libswscale/swscale.h"
-#include "libavdevice/avdevice.h"
-#include "libavfilter/avfilter.h"
-#include "libavfilter/buffersink.h"
-#include "libavfilter/buffersrc.h"
-}
 
+
+using namespace std;
 
 class PlayerManager
 {
@@ -23,6 +22,9 @@ public:
 	explicit PlayerManager();
 	~PlayerManager();
 
+
+
+private:
 
 
 };

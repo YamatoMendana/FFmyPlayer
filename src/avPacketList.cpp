@@ -30,7 +30,7 @@ int AvPacketList::init()
 		qDebug() << strErr;
 		return AVERROR(ENOMEM);
 	}
-	abort_request = 1;
+	nAbort_request = 1;
 	return 0;
 }
 
@@ -41,10 +41,10 @@ void AvPacketList::packet_queue_flush()
 	SDL_LockMutex(pSDL_mutex);
 	while (av_fifo_read(pkt_list, &pkt1, 1) >= 0)
 		av_packet_free(&pkt1.pkt);
-	nb_packets = 0;
-	size = 0;
-	duration = 0;
-	serial++;
+	nNb_packets = 0;
+	nSize = 0;
+	nDuration = 0;
+	nSerial++;
 	SDL_UnlockMutex(pSDL_mutex);
 }
 
@@ -61,18 +61,18 @@ int AvPacketList::packet_queue_put_private(AVPacket* pkt)
 	MyAVPacketList pkt1;
 	int ret;
 
-	if (abort_request)
+	if (nAbort_request)
 		return -1;
 
 	pkt1.pkt = pkt;
-	pkt1.serial = serial;
+	pkt1.serial = nSerial;
 
 	ret = av_fifo_write(pkt_list, &pkt1, 1);
 	if (ret < 0)
 		return ret;
-	nb_packets++;
-	size += pkt1.pkt->size + sizeof(pkt1);
-	duration += pkt1.pkt->duration;
+	nNb_packets++;
+	nSize += pkt1.pkt->size + sizeof(pkt1);
+	nDuration += pkt1.pkt->duration;
 	SDL_CondSignal(pSDL_cond);
 	return 0;
 }
@@ -110,7 +110,7 @@ int AvPacketList::packet_queue_put_nullpacket(AVPacket* pkt, int stream_index)
 void AvPacketList::packet_queue_abort()
 {
 	SDL_LockMutex(pSDL_mutex);
-	abort_request = 1;
+	nAbort_request = 1;
 	SDL_CondSignal(pSDL_cond);
 	SDL_UnlockMutex(pSDL_mutex);
 }
@@ -118,8 +118,8 @@ void AvPacketList::packet_queue_abort()
 void AvPacketList::packet_queue_start()
 {
 	SDL_LockMutex(pSDL_mutex);
-	abort_request = 0;
-	serial++;
+	nAbort_request = 0;
+	nSerial++;
 	SDL_UnlockMutex(pSDL_mutex);
 }
 
@@ -131,15 +131,15 @@ int AvPacketList::packet_queue_get(AVPacket* pkt, int block, int* serial)
 	SDL_LockMutex(pSDL_mutex);
 
 	for (;;) {
-		if (abort_request) {
+		if (nAbort_request) {
 			ret = -1;
 			break;
 		}
 
 		if (av_fifo_read(pkt_list, &pkt1, 1) >= 0) {
-			nb_packets--;
-			size -= pkt1.pkt->size + sizeof(pkt1);
-			duration -= pkt1.pkt->duration;
+			nNb_packets--;
+			nSize -= pkt1.pkt->size + sizeof(pkt1);
+			nDuration -= pkt1.pkt->duration;
 			av_packet_move_ref(pkt, pkt1.pkt);
 			if (serial)
 				*serial = pkt1.serial;
@@ -180,3 +180,4 @@ int AvPacketList::queueSize()
 {
 	return m_packetList.size();
 }
+

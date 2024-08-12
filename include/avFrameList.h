@@ -4,7 +4,7 @@
 #include <QList>
 
 #include "SDL.h"
-#include "globalStruct.h"
+#include "Common.h"
 #include "avPacketList.h"
 
 extern "C"
@@ -19,12 +19,12 @@ extern "C"
 
 
 
-class AVFrameList
+class AvFrameList
 {
 public:
-	explicit AVFrameList();
-	~AVFrameList();
-	int init(int max_size, int keep_last);
+	explicit AvFrameList();
+	~AvFrameList();
+	int init(AvPacketList* pktq, int max_size, int keep_last);
 	void destory();
 	void frame_queue_unref_item(Frame* vp);
 	Frame* frame_queue_peek_writable();
@@ -32,7 +32,6 @@ public:
 
 	void frame_queue_push();
 	void frame_queue_next();
-
 	void frame_queue_signal();
 
 	int frame_queue_nb_remaining();
@@ -53,16 +52,17 @@ public:
 private:
 	SDL_mutex* pSDL_mutex;
 	SDL_cond* pSDL_cond;
+
 public:
-	int rindex;
-	int windex;
-	int size;
-	int max_size;
+	int nRindex;
+	int nWindex;
+	int nSize;
+	int nMax_size;
 	int keep_last;
-	int rindex_shown;
+	int nRindex_shown;
 
 	QList<Frame> m_frameList;
-	AvPacketList* pktq;
+	AvPacketList* pPktList;
 };
 
 

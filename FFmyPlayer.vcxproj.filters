@@ -97,6 +97,15 @@
     <ClCompile Include="src\decoder.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SDL_Widget.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerClock.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerDisplay.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\MainWindow.h">
@@ -804,7 +813,16 @@
     <ClInclude Include="include\decoder.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\globalStruct.h">
+    <ClInclude Include="include\Common.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SDL_Widget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\playerClock.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\playerDisplay.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

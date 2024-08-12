@@ -2,17 +2,17 @@
 
 #include <QDebug>
 
-AVFrameList::AVFrameList()
+AvFrameList::AvFrameList()
 {
 
 }
 
-AVFrameList::~AVFrameList()
+AvFrameList::~AvFrameList()
 {
 	
 }
 
-int AVFrameList::init(int max_size, int keep_last)
+int AvFrameList::init(AvPacketList* pktq,int max_size, int keep_last)
 {
 	pSDL_mutex = SDL_CreateMutex();
 	if (!pSDL_mutex)
@@ -28,8 +28,8 @@ int AVFrameList::init(int max_size, int keep_last)
 		qDebug() << strErr;
 		return AVERROR(ENOMEM);
 	}
-
-	max_size = FFMIN(max_size, FRAME_QUEUE_SIZE);
+	pPktList = pktq;
+	nMax_size = FFMIN(max_size, FRAME_QUEUE_SIZE);
 	keep_last = !!keep_last;
 	for (int i = 0; i < max_size; i++)
 	{
@@ -42,10 +42,10 @@ int AVFrameList::init(int max_size, int keep_last)
 
 }
 
-void AVFrameList::destory()
+void AvFrameList::destory()
 {
 	int i;
-	for (i = 0; i < max_size; i++) {
+	for (i = 0; i < nMax_size; i++) {
 		Frame* vp = &m_frameList[i];
 		frame_queue_unref_item(vp);
 		av_frame_free(&vp->frame);
@@ -55,91 +55,91 @@ void AVFrameList::destory()
 	SDL_DestroyCond(pSDL_cond);
 }
 
-void AVFrameList::frame_queue_unref_item(Frame* vp)
+void AvFrameList::frame_queue_unref_item(Frame* vp)
 {
 	av_frame_unref(vp->frame);
 	avsubtitle_free(&vp->sub);
 }
 
 
-Frame* AVFrameList::frame_queue_peek_writable()
+Frame* AvFrameList::frame_queue_peek_writable()
 {
 	SDL_LockMutex(pSDL_mutex);
-	while (size >= max_size &&
-		! pktq->abort_request) {
+	while (nSize >= nMax_size &&
+		!pPktList->get_abort_request()) {
 		SDL_CondWait(pSDL_cond, pSDL_mutex);
 	}
 	SDL_UnlockMutex(pSDL_mutex);
 
-	if (pktq->abort_request)
+	if (pPktList->get_abort_request())
 		return NULL;
 
-	return &m_frameList[windex];
+	return &m_frameList[nWindex];
 }
 
-Frame* AVFrameList::frame_queue_peek_readable()
+Frame* AvFrameList::frame_queue_peek_readable()
 {
 	/* wait until we have a readable a new frame */
 	SDL_LockMutex(pSDL_mutex);
-	while (size - rindex_shown <= 0 &&
-		!pktq->abort_request) {
+	while (nSize - nRindex_shown <= 0 &&
+		!pPktList->get_abort_request()) {
 		SDL_CondWait(pSDL_cond,pSDL_mutex);
 	}
 	SDL_UnlockMutex(pSDL_mutex);
 
-	if (pktq->abort_request)
+	if (pPktList->get_abort_request())
 		return NULL;
 
-	return &m_frameList[(rindex + rindex_shown) % max_size];
+	return &m_frameList[(nRindex + nRindex_shown) % nMax_size];
 }
 
-void AVFrameList::frame_queue_push()
+void AvFrameList::frame_queue_push()
 {
-	if (++windex == max_size)
-		windex = 0;
+	if (++nWindex == nMax_size)
+		nWindex = 0;
 	SDL_LockMutex(pSDL_mutex);
-	size++;
+	nSize++;
 	SDL_CondSignal(pSDL_cond);
 	SDL_UnlockMutex(pSDL_mutex);
 }
 
-void AVFrameList::frame_queue_next()
+void AvFrameList::frame_queue_next()
 {
-	if (keep_last && !rindex_shown) {
-		rindex_shown = 1;
+	if (keep_last && !nRindex_shown) {
+		nRindex_shown = 1;
 		return;
 	}
-	frame_queue_unref_item(&m_frameList[rindex]);
-	if (++rindex == max_size)
-		rindex = 0;
+	frame_queue_unref_item(&m_frameList[nRindex]);
+	if (++nRindex == nMax_size)
+		nRindex = 0;
 	SDL_LockMutex(pSDL_mutex);
-	size--;
+	nSize--;
 	SDL_CondSignal(pSDL_cond);
 	SDL_UnlockMutex(pSDL_mutex);
 }
 
-void AVFrameList::frame_queue_signal()
+void AvFrameList::frame_queue_signal()
 {
 	SDL_LockMutex(pSDL_mutex);
 	SDL_CondSignal(pSDL_cond);
 	SDL_UnlockMutex(pSDL_mutex);
 }
 
-int AVFrameList::frame_queue_nb_remaining()
+int AvFrameList::frame_queue_nb_remaining()
 {
-	return size - rindex_shown;
+	return nSize - nRindex_shown;
 }
 
-int64_t AVFrameList::frame_queue_last_pos()
+int64_t AvFrameList::frame_queue_last_pos()
 {
-	Frame* fp = &m_frameList[rindex];
-	if (rindex_shown && fp->serial == pktq->serial)
+	Frame* fp = &m_frameList[nRindex];
+	if (nRindex_shown && fp->serial == pPktList->get_serial())
 		return fp->pos;
 	else
 		return -1;
 }
 
-void AVFrameList::empty()
+void AvFrameList::empty()
 {
 	SDL_LockMutex(pSDL_mutex);
 	while (m_frameList.size() > 0)
@@ -152,27 +152,27 @@ void AVFrameList::empty()
 
 }
 
-bool AVFrameList::isEmpty()
+bool AvFrameList::isEmpty()
 {
 	return m_frameList.isEmpty();
 }
 
-int AVFrameList::queueSize()
+int AvFrameList::queueSize()
 {
 	return m_frameList.size();
 }
 
-Frame* AVFrameList::frame_queue_peek()
+Frame* AvFrameList::frame_queue_peek()
 {
-	return &m_frameList[(rindex + rindex_shown) % max_size];
+	return &m_frameList[(nRindex + nRindex_shown) % nMax_size];
 }
 
-Frame* AVFrameList::frame_queue_peek_next()
+Frame* AvFrameList::frame_queue_peek_next()
 {
-	return &m_frameList[(rindex + rindex_shown + 1) % max_size];
+	return &m_frameList[(nRindex + nRindex_shown + 1) % nMax_size];
 }
 
-Frame* AVFrameList::frame_queue_peek_last()
+Frame* AvFrameList::frame_queue_peek_last()
 {
-	return &m_frameList[rindex];
+	return &m_frameList[nRindex];
 }

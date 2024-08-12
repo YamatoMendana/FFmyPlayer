@@ -23,10 +23,10 @@ int Decoder::decoder_init(AVCodecContext* ctx, AvPacketList* list , SDL_cond* co
 	return 0;
 }
 
-void Decoder::decoder_destroy(Decoder* d)
+void Decoder::decoder_destroy()
 {
-	av_packet_free(&d->pkt);
-	avcodec_free_context(&d->avctx);
+	av_packet_free(&pkt);
+	avcodec_free_context(&avctx);
 }
 
 int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
@@ -34,9 +34,9 @@ int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
 	int ret = AVERROR(EAGAIN);
 
 	for (;;) {
-		if (pPktList->serial == pkt_serial) {
+		if (pPktList->get_serial() == pkt_serial) {
 			do {
-				if (pPktList->abort_request)
+				if (pPktList->get_abort_request())
 					return -1;
 
 				switch (avctx->codec_type) {
@@ -77,7 +77,7 @@ int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
 		}
 
 		do {
-			if (pPktList->nb_packets == 0)
+			if (pPktList->get_nb_packets() == 0)
 				SDL_CondSignal(empty_queue_cond);
 			if (packet_pending) {
 				packet_pending = 0;
@@ -93,7 +93,7 @@ int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
 					next_pts_tb = start_pts_tb;
 				}
 			}
-			if (pPktList->serial == pkt_serial)
+			if (pPktList->get_serial() == pkt_serial)
 				break;
 			av_packet_unref(pkt);
 		} while (1);
@@ -134,12 +134,22 @@ int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
 	}
 }
 
-void Decoder::decoder_abort()
+void Decoder::decoder_abort(AvFrameList* frameList)
 {
 	pPktList->packet_queue_abort();
-	pFmList->frame_queue_signal();
+	frameList->frame_queue_signal();
 	SDL_WaitThread(decoder_tid, NULL);
 	decoder_tid = NULL;
 	pPktList->packet_queue_flush();
 }
 
+int Decoder::decoder_start(int (*fn)(void*), const char* thread_name, void* arg)
+{
+	pPktList->packet_queue_start();
+	decoder_tid = SDL_CreateThread(fn, thread_name, arg);
+	if (!decoder_tid) {
+		av_log(NULL, AV_LOG_ERROR, "SDL_CreateThread(): %s\n", SDL_GetError());
+		return AVERROR(ENOMEM);
+	}
+	return 0;
+}

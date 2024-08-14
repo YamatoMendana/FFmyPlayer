@@ -2,8 +2,9 @@
 #define __AV_FRAME_QUEUE_H__
 
 #include <QList>
+#include <mutex>
+#include <condition_variable>
 
-#include "SDL.h"
 #include "Common.h"
 #include "avPacketList.h"
 
@@ -50,8 +51,8 @@ public:
 	
 
 private:
-	SDL_mutex* pSDL_mutex;
-	SDL_cond* pSDL_cond;
+	std::mutex mutex;
+	std::condition_variable cond;
 
 public:
 	int nRindex;

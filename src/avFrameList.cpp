@@ -14,20 +14,6 @@ AvFrameList::~AvFrameList()
 
 int AvFrameList::init(AvPacketList* pktq,int max_size, int keep_last)
 {
-	pSDL_mutex = SDL_CreateMutex();
-	if (!pSDL_mutex)
-	{
-		QString strErr = QString("SDL_CreateMutex():%1\n").arg(SDL_GetError());
-		qDebug() << strErr;
-		return AVERROR(ENOMEM);
-	}
-	pSDL_cond = SDL_CreateCond();
-	if (!pSDL_cond)
-	{
-		QString strErr = QString("SDL_CreateCond():%1\n").arg(SDL_GetError());
-		qDebug() << strErr;
-		return AVERROR(ENOMEM);
-	}
 	pPktList = pktq;
 	nMax_size = FFMIN(max_size, FRAME_QUEUE_SIZE);
 	keep_last = !!keep_last;
@@ -51,8 +37,6 @@ void AvFrameList::destory()
 		av_frame_free(&vp->frame);
 	}
 	m_frameList.clear();
-	SDL_DestroyMutex(pSDL_mutex);
-	SDL_DestroyCond(pSDL_cond);
 }
 
 void AvFrameList::frame_queue_unref_item(Frame* vp)
@@ -64,12 +48,12 @@ void AvFrameList::frame_queue_unref_item(Frame* vp)
 
 Frame* AvFrameList::frame_queue_peek_writable()
 {
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	while (nSize >= nMax_size &&
 		!pPktList->get_abort_request()) {
-		SDL_CondWait(pSDL_cond, pSDL_mutex);
+		cond.wait(lck);
 	}
-	SDL_UnlockMutex(pSDL_mutex);
+	lck.unlock();
 
 	if (pPktList->get_abort_request())
 		return NULL;
@@ -79,13 +63,12 @@ Frame* AvFrameList::frame_queue_peek_writable()
 
 Frame* AvFrameList::frame_queue_peek_readable()
 {
-	/* wait until we have a readable a new frame */
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	while (nSize - nRindex_shown <= 0 &&
 		!pPktList->get_abort_request()) {
-		SDL_CondWait(pSDL_cond,pSDL_mutex);
+		cond.wait(lck);
 	}
-	SDL_UnlockMutex(pSDL_mutex);
+	lck.unlock();
 
 	if (pPktList->get_abort_request())
 		return NULL;
@@ -97,10 +80,9 @@ void AvFrameList::frame_queue_push()
 {
 	if (++nWindex == nMax_size)
 		nWindex = 0;
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	nSize++;
-	SDL_CondSignal(pSDL_cond);
-	SDL_UnlockMutex(pSDL_mutex);
+	cond.notify_all();
 }
 
 void AvFrameList::frame_queue_next()
@@ -112,17 +94,15 @@ void AvFrameList::frame_queue_next()
 	frame_queue_unref_item(&m_frameList[nRindex]);
 	if (++nRindex == nMax_size)
 		nRindex = 0;
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	nSize--;
-	SDL_CondSignal(pSDL_cond);
-	SDL_UnlockMutex(pSDL_mutex);
+	cond.notify_all();
 }
 
 void AvFrameList::frame_queue_signal()
 {
-	SDL_LockMutex(pSDL_mutex);
-	SDL_CondSignal(pSDL_cond);
-	SDL_UnlockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
+	cond.notify_all();
 }
 
 int AvFrameList::frame_queue_nb_remaining()
@@ -141,15 +121,13 @@ int64_t AvFrameList::frame_queue_last_pos()
 
 void AvFrameList::empty()
 {
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	while (m_frameList.size() > 0)
 	{
 		Frame fm= m_frameList.takeFirst();
 		AVFrame* frame = fm.frame;
 		av_frame_unref(frame);
 	}
-	SDL_UnlockMutex(pSDL_mutex);
-
 }
 
 bool AvFrameList::isEmpty()

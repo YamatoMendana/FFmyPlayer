@@ -10,14 +10,14 @@ Decoder::~Decoder()
 
 }
 
-int Decoder::decoder_init(AVCodecContext* ctx, AvPacketList* list , SDL_cond* cond)
+int Decoder::decoder_init(AVCodecContext* ctx, AvPacketList* list , std::condition_variable* cv)
 {
 	pkt = av_packet_alloc();
 	if (!pkt)
 		return AVERROR(ENOMEM);
 	avctx = ctx;
 	pPktList = list;
-	empty_queue_cond = cond;
+	cond = cv;
 	start_pts = AV_NOPTS_VALUE;
 	pkt_serial = -1;
 	return 0;
@@ -78,7 +78,7 @@ int Decoder::decoder_decode_frame(AVFrame* frame, AVSubtitle* sub)
 
 		do {
 			if (pPktList->get_nb_packets() == 0)
-				SDL_CondSignal(empty_queue_cond);
+				cond->notify_all();
 			if (packet_pending) {
 				packet_pending = 0;
 			}
@@ -138,18 +138,11 @@ void Decoder::decoder_abort(AvFrameList* frameList)
 {
 	pPktList->packet_queue_abort();
 	frameList->frame_queue_signal();
-	SDL_WaitThread(decoder_tid, NULL);
-	decoder_tid = NULL;
+
+	{
+		std::unique_lock<std::mutex> lck(mutex);
+		cond->wait(lck);
+	}
 	pPktList->packet_queue_flush();
 }
 
-int Decoder::decoder_start(int (*fn)(void*), const char* thread_name, void* arg)
-{
-	pPktList->packet_queue_start();
-	decoder_tid = SDL_CreateThread(fn, thread_name, arg);
-	if (!decoder_tid) {
-		av_log(NULL, AV_LOG_ERROR, "SDL_CreateThread(): %s\n", SDL_GetError());
-		return AVERROR(ENOMEM);
-	}
-	return 0;
-}

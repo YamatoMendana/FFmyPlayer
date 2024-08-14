@@ -16,20 +16,7 @@ int AvPacketList::init()
 	pkt_list = av_fifo_alloc2(1, sizeof(MyAVPacketList), AV_FIFO_FLAG_AUTO_GROW);
 	if (!pkt_list)
 		return AVERROR(ENOMEM);
-	pSDL_mutex = SDL_CreateMutex();
-	if (!pSDL_mutex)
-	{
-		QString strErr = QString("SDL_CreateMutex():%1\n").arg(SDL_GetError());
-		qDebug() << strErr;
-		return AVERROR(ENOMEM);
-	}
-	pSDL_cond = SDL_CreateCond();
-	if (!pSDL_cond)
-	{
-		QString strErr = QString("SDL_CreateCond():%1\n").arg(SDL_GetError());
-		qDebug() << strErr;
-		return AVERROR(ENOMEM);
-	}
+
 	nAbort_request = 1;
 	return 0;
 }
@@ -38,22 +25,19 @@ void AvPacketList::packet_queue_flush()
 {
 	MyAVPacketList pkt1;
 
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	while (av_fifo_read(pkt_list, &pkt1, 1) >= 0)
 		av_packet_free(&pkt1.pkt);
 	nNb_packets = 0;
 	nSize = 0;
 	nDuration = 0;
 	nSerial++;
-	SDL_UnlockMutex(pSDL_mutex);
 }
 
 void AvPacketList::destroy()
 {
 	packet_queue_flush();
 	av_fifo_freep2(&pkt_list);
-	SDL_DestroyMutex(pSDL_mutex);
-	SDL_DestroyCond(pSDL_cond);
 }
 
 int AvPacketList::packet_queue_put_private(AVPacket* pkt)
@@ -73,7 +57,7 @@ int AvPacketList::packet_queue_put_private(AVPacket* pkt)
 	nNb_packets++;
 	nSize += pkt1.pkt->size + sizeof(pkt1);
 	nDuration += pkt1.pkt->duration;
-	SDL_CondSignal(pSDL_cond);
+	cond.notify_all();
 	return 0;
 }
 
@@ -91,9 +75,9 @@ int AvPacketList::packet_queue_put(AVPacket* pkt)
 	}
 	av_packet_move_ref(pkt1, pkt);
 
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	ret = packet_queue_put_private(pkt1);
-	SDL_UnlockMutex(pSDL_mutex);
+	lck.unlock();
 
 	if (ret < 0)
 		av_packet_free(&pkt1);
@@ -109,18 +93,16 @@ int AvPacketList::packet_queue_put_nullpacket(AVPacket* pkt, int stream_index)
 
 void AvPacketList::packet_queue_abort()
 {
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	nAbort_request = 1;
-	SDL_CondSignal(pSDL_cond);
-	SDL_UnlockMutex(pSDL_mutex);
+	cond.notify_all();
 }
 
 void AvPacketList::packet_queue_start()
 {
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	nAbort_request = 0;
 	nSerial++;
-	SDL_UnlockMutex(pSDL_mutex);
 }
 
 int AvPacketList::packet_queue_get(AVPacket* pkt, int block, int* serial)
@@ -128,7 +110,7 @@ int AvPacketList::packet_queue_get(AVPacket* pkt, int block, int* serial)
 	MyAVPacketList pkt1;
 	int ret;
 
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 
 	for (;;) {
 		if (nAbort_request) {
@@ -152,23 +134,21 @@ int AvPacketList::packet_queue_get(AVPacket* pkt, int block, int* serial)
 			break;
 		}
 		else {
-			SDL_CondWait(pSDL_cond, pSDL_mutex);
+			cond.wait(lck);
 		}
 	}
-	SDL_UnlockMutex(pSDL_mutex);
 	return ret;
 }
 
 void AvPacketList::empty()
 {
-	SDL_LockMutex(pSDL_mutex);
+	std::unique_lock<std::mutex> lck(mutex);
 	while (m_packetList.size() > 0)
 	{
 		MyAVPacketList pktList =  m_packetList.takeFirst();
 		AVPacket* packet = pktList.pkt;
 		av_packet_unref(packet);
 	}
-	SDL_UnlockMutex(pSDL_mutex);
 }
 
 bool AvPacketList::isEmpty()

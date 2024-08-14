@@ -59,32 +59,3 @@ void PlayerClock::sync_clock_to_slave(PlayerClock* slave)
 		set_clock(slave_clock, slave->m_serial);
 }
 
-//void PlayerClock::set_last_update(int lastUpdate)
-//{
-//	m_last_updated = lastUpdate;
-//}
-
-//int PlayerClock::get_last_update() const
-//{
-//	return m_last_updated;
-//}
-//
-//void PlayerClock::set_serial(int serial)
-//{
-//	m_serial = serial;
-//}
-//
-//int PlayerClock::get_serial() const
-//{
-//	return m_serial;
-//}
-//
-//void PlayerClock::set_pause(int pause)
-//{
-//	m_paused = pause;
-//}
-//
-//int PlayerClock::get_pause() const
-//{
-//	return m_paused;
-//}

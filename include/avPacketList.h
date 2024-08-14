@@ -2,8 +2,11 @@
 #define __AV_PACKET_QUEUE_H__
 
 #include <QList>
-#include "SDL.h"
+#include <mutex>
+#include <condition_variable>
+
 #include "Common.h"
+
 
 extern "C"
 {
@@ -11,7 +14,7 @@ extern "C"
 #include "libavutil/fifo.h"
 }
 
-
+using namespace std;
 
 class AvPacketList
 {
@@ -55,8 +58,9 @@ public:
 	inline int get_nb_packets() { return nNb_packets; }
 
 private:
-	SDL_mutex* pSDL_mutex;
-	SDL_cond* pSDL_cond;
+	std::mutex mutex;
+	std::condition_variable cond;
+
 	AVFifo* pkt_list;
 
 	int nNb_packets;

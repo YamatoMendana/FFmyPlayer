@@ -7,7 +7,10 @@
 
 SDL_Widget::SDL_Widget()
 {
-
+	window = GlobalSingleton::getInstance()->getConfigValue<SDL_Window*>("window");
+	renderer = GlobalSingleton::getInstance()->getConfigValue<SDL_Renderer*>("renderer");
+	renderer_info = GlobalSingleton::getInstance()->getConfigValue<SDL_RendererInfo*>("renderer_info");
+	audio_dev = GlobalSingleton::getInstance()->getConfigValue<SDL_AudioDeviceID>("audio_dev");
 }
 
 SDL_Widget::~SDL_Widget()
@@ -23,6 +26,9 @@ SDL_Widget::~SDL_Widget()
 int SDL_Widget::Init()
 {
 	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
+	auto Audio_disable = GlobalSingleton::getInstance()->getConfigValue<int>("Audio_disable");
+	auto Display_disable = GlobalSingleton::getInstance()->getConfigValue<int>("Display_disable");
+
 	if (Audio_disable)
 		flags &= ~SDL_INIT_AUDIO;
 	else {
@@ -47,6 +53,7 @@ int SDL_Widget::setWidget(void* widId)
 #ifdef SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR
 		SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
 #endif
+
 		window = SDL_CreateWindowFrom(widId);
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		if (window) {
@@ -56,11 +63,11 @@ int SDL_Widget::setWidget(void* widId)
 				renderer = SDL_CreateRenderer(window, -1, 0);
 			}
 			if (renderer) {
-				if (!SDL_GetRendererInfo(renderer, &renderer_info))
-					qDebug() << QString("Initialized %s renderer. %1").arg(renderer_info.name);
+				if (!SDL_GetRendererInfo(renderer, renderer_info))
+					qDebug() << QString("Initialized %s renderer. %1").arg(renderer_info->name);
 			}
 		}
-		if (!window || !renderer || !renderer_info.num_texture_formats) {
+		if (!window || !renderer || !renderer_info->num_texture_formats) {
 			qDebug()<<QString("Failed to create window or renderer: %1").arg(SDL_GetError());
 			return -1;
 		}

@@ -1,7 +1,6 @@
 #ifndef __PLAYER_CLOCK_H__
 #define __PLAYER_CLOCK_H__
 
-#include "Common.h"
 #include "avPacketList.h"
 
 extern "C"

@@ -55,7 +55,16 @@ private:
 		AVFormatContext* s, AVStream* st, const AVCodec* codec);
 	AVDictionary** setup_find_stream_info_opts(AVFormatContext* s, AVDictionary* codec_opts);
 
+	//配置滤镜图
+	int configure_filtergraph(AVFilterGraph* graph, const char* filtergraph,
+		AVFilterContext* source_ctx, AVFilterContext* sink_ctx);
+	int configure_audio_filters(const char* afilters, int force_output_format);
+
 	int is_realtime(AVFormatContext* s);
+
+	//获取主时钟类型
+	int get_master_sync_type();
+	double get_master_clock();
 
 	
 	void audioStreamClose();
@@ -67,6 +76,23 @@ private:
 	void stream_seek(int64_t pos, int64_t rel, int by_bytes);
 	void stream_toggle_pause();
 	void step_to_next_frame();
+
+	//调整音频帧的时间戳
+	int synchronize_audio(int nb_samples);
+	//更新音频样本的显示
+	void update_sample_display(short* samples, int samples_size);
+	int audio_decode_frame();
+
+
+	static void sdl_audio_callback(void* userdata, Uint8* stream, int len);
+	void audio_callback(Uint8* stream, int len);
+
+	int audio_open(AVChannelLayout* wanted_channel_layout, int wanted_sample_rate, 
+		struct AudioParams* audio_hw_params);
+	void audio_thread();
+	void video_thread();
+	void subtitle_thread();
+
 
 	void read_thread();
 
@@ -120,6 +146,10 @@ private:
 	Decoder viddec;		// 视频解码器上下文
 	Decoder subdec;		// 字幕解码器上下文
 
+	const char* audio_codec_name;
+	const char* subtitle_codec_name;
+	const char* video_codec_name;
+
 	// 帧队列
 	AvFrameList pictq;  // 视频帧队列
 	AvFrameList sampq;  // 音频帧队列
@@ -166,6 +196,8 @@ private:
 	int nFrame_drops_early;	// 早期丢帧数
 	int nFrame_drops_late;	// 晚期丢帧数
 
+	char* afilters = nullptr;	//音频过滤器参数
+
 	//音频时钟相关
 	double nAudio_clock;				// 音频时钟
 	int nAudio_clock_serial;			// 音频时钟序列号
@@ -197,6 +229,8 @@ private:
 	int nLast_subtitle_stream;	//最后一个字幕流
 
 	int nStep;	// 步进
+	int lowres = 0;	//是否低画质
+	int fast = 0;	
 
 	//字幕相关
 	struct SwsContext* pSub_convert_ctx;	// 字幕转换上下文
@@ -220,8 +254,21 @@ private:
 
 	//函数管理句柄
 	unordered_map<int, streamClosehandler> um_stCloseHandlerMap;
+	SDL_AudioDeviceID audio_dev;
 
+	int filter_nbthreads;	//过滤器线程数
+	int64_t audio_callback_time;	//记录音频回调函数被调用时的时间戳
+	int genpts;	//更新PTS
+	int seek_by_bytes;
+	int64_t start_time;	//播放开始时间
+	bool Audio_disable;//是否禁用音频播放
+	bool Video_disable;//是否禁用视频播放
+	bool Subtitle_disable;//禁用字幕显示
+	bool Display_disable;//是否禁用显示功能
 
+	int infinite_buffer = -1;//控制输入缓冲区行为
+	int loop = 1;	//播放循环
+	int autoexit;	//自动退出
 };
 
 int decode_interrupt_cb(void* ctx)

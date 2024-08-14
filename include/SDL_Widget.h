@@ -31,20 +31,23 @@ public:
 	void set_sdl_yuv_conversion_mode(AVFrame* frame);
 	void set_default_window_size(int width, int height, AVRational sar);
 
-	void CloseAudioDevice() { SDL_CloseAudioDevice(audio_dev); }
+	void CloseAudioDevice() { 
+		SDL_AudioDeviceID audio_dev = GlobalSingleton::getInstance()->getConfigValue<SDL_AudioDeviceID>("audio_dev");
+		SDL_CloseAudioDevice(audio_dev); 
+	}
 
 
 public:
 	
 private:
-	SDL_Window* window;
-	SDL_Renderer* renderer;
-	SDL_RendererInfo renderer_info = { 0 };
-	SDL_AudioDeviceID audio_dev;
-
 	SDL_Texture* pVis_texture;	// 可视化纹理
 	SDL_Texture* pSub_texture;	// 字幕纹理
 	SDL_Texture* pVid_texture;	// 视频纹理
+
+	SDL_Renderer* renderer;
+	SDL_RendererInfo* renderer_info;
+	SDL_Window* window;
+	SDL_AudioDeviceID audio_dev;
 
 	int default_width;
 	int default_height;

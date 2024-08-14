@@ -29,6 +29,11 @@ extern "C"
 //最大的音频速度变化，以获得正确的同步
 #define SAMPLE_CORRECTION_PERCENT_MAX 10
 
+static SDL_Window* window;
+static SDL_Renderer* renderer;
+static SDL_RendererInfo renderer_info = { 0 };
+static SDL_AudioDeviceID audio_dev;
+
 typedef struct Frame {
 	//帧数据
 	AVFrame* frame;
@@ -145,8 +150,17 @@ enum ErrorCode
 
 	DECODER_INIT_FAIL,
 	DECODER_START_FAIL,
+	DECODER_DECODE_FAIL,
 
 	CREATE_GRAPH_FILTER_FAIL = 1070,
+
+	ADD_FRAME_FAIL,
+	FRAME_ALLOC_FAIL,
+	VIDEO_FRAME_GET_FAIL,
+	VIDEO_FILTER_CONFIGURE_FAIL,
+	FRAMELIST_PEEK_FAIL,
+
+	GRAPH_ALLOC_FAIL,
 
 };
 
@@ -170,111 +184,11 @@ private:
 	int errorCode;
 };
 
-
-//// 定义一个包含所有可能类型的 variant
-//using ConfigVariant = std::variant<
-//	bool, int, int64_t, float, double, char*,
-//	SDL_Window*, SDL_Renderer*, SDL_RendererInfo*, SDL_AudioDeviceID
-//>;
-//
-//class GlobalSingleton
-//{
-//public:
-//	// 获取单例实例
-//	static GlobalSingleton& getInstance() {
-//		static GlobalSingleton instance;
-//		return instance;
-//	}
-//
-//	// 获取 map 中成员的函数
-//	template<typename T>
-//	T getConfigValue(const std::string& key) const {
-//		std::shared_lock lock(rwlock); // 读锁
-//		auto it = configMap.find(key);
-//		if (it != configMap.end()) {
-//			try {
-//				return std::get<T>(*(it->second));
-//			}
-//			catch (const std::bad_variant_access&) {
-//				std::cerr << "Type mismatch for key: " << key << std::endl;
-//			}
-//		}
-//		else {
-//			std::cerr << "Key not found: " << key << std::endl;
-//		}
-//		return T(); // 返回默认值
-//	}
-//
-//	// 修改 map 中成员的函数
-//	template<typename T>
-//	void setConfigValue(const std::string& key, const T& value) {
-//		std::unique_lock lock(rwlock); // 写锁
-//		auto it = configMap.find(key);
-//		if (it != configMap.end()) {
-//			try {
-//				*(it->second) = value;
-//			}
-//			catch (const std::bad_variant_access&) {
-//				std::cerr << "Type mismatch for key: " << key << std::endl;
-//			}
-//		}
-//		else {
-//			configMap[key] = make_shared<ConfigVariant>(value);
-//			std::cerr << "Key insert: " << key << std::endl;
-//		}
-//	}
-//
-//	void print() {
-//		// 从 map 中读取并打印值
-//		for (const auto& pair : configMap) {
-//			std::cout << "Key: " << pair.first << ", Value: ";
-//
-//			// 使用 std::visit 来处理 variant 中的不同类型
-//			std::visit([](const auto& value) {
-//				std::cout << value;
-//				}, *(pair.second));
-//
-//			std::cout << std::endl;
-//		}
-//	}
-//
-//private:
-//
-//
-//private:
-//	GlobalSingleton() {
-//		configMap = {
-//			{"Audio_disable", std::make_shared<ConfigVariant>(false)},
-//			{"Video_disable", std::make_shared<ConfigVariant>(false)},
-//			{"Subtitle_disable", std::make_shared<ConfigVariant>(false)},
-//			{"Display_disable", std::make_shared<ConfigVariant>(false)},
-//			{"startup_volume", std::make_shared<ConfigVariant>(100)},
-//			{"genpts", std::make_shared<ConfigVariant>(0)},
-//			{"seek_by_bytes", std::make_shared<ConfigVariant>(-1)},
-//			{"start_time", std::make_shared<ConfigVariant>(AV_NOPTS_VALUE)},
-//			{"infinite_buffer", std::make_shared<ConfigVariant>(-1)},
-//			{"loop", std::make_shared<ConfigVariant>(1)},
-//			{"autoexit", std::make_shared<ConfigVariant>(0)},
-//			{"filter_nbthreads", std::make_shared<ConfigVariant>(0)},
-//			{"audio_callback_time", std::make_shared<ConfigVariant>(0LL)},
-//			{"window", std::make_shared<ConfigVariant>(nullptr)},
-//			{"renderer", std::make_shared<ConfigVariant>(nullptr)},
-//			{"renderer_info", std::make_shared<ConfigVariant>(nullptr)},
-//			{"audio_dev", std::make_shared<ConfigVariant>(0)}
-//		};
-//	};
-//
-//	// 删除拷贝构造函数和赋值操作符，防止拷贝
-//	GlobalSingleton(const GlobalSingleton&) = delete;
-//	GlobalSingleton& operator=(const GlobalSingleton&) = delete;
-//
-//	mutable std::shared_mutex rwlock;
-//	std::map<std::string, std::shared_ptr<ConfigVariant>> configMap;
-//};
-
-
 // 定义一个包含几种不同类型的 variant
-using MyVariant = std::variant<bool, int, int64_t, double, std::string, SDL_Renderer*, SDL_RendererInfo*, SDL_Window*, SDL_AudioDeviceID>;
+using MyVariant = std::variant<bool, int, int64_t, Uint32, double
+	, char*, std::string
+	, SDL_Renderer*, SDL_RendererInfo*, SDL_Window*
+>;
 #undef main;
 
 class GlobalSingleton
@@ -286,6 +200,7 @@ public:
 		std::lock_guard<std::mutex> lock(mutex);
 		if (!instance) {
 			instance = std::unique_ptr<GlobalSingleton>(new GlobalSingleton());
+			instance->init();
 		}
 		return instance.get();
 	}
@@ -328,19 +243,9 @@ public:
 		}
 	}
 
-	void print() {
-		// 从 map 中读取并打印值
-		for (const auto& pair : configMap) {
-			std::cout << "Key: " << pair.first << ", Value: ";
+	void print();
 
-			// 使用 std::visit 来处理 variant 中的不同类型
-			std::visit([](const auto& value) {
-				std::cout << value;
-				}, *(pair.second));
-
-			std::cout << std::endl;
-		}
-	}
+	int init();
 
 private:
 	GlobalSingleton();

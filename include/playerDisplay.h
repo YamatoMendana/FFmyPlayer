@@ -28,6 +28,10 @@ extern "C"
 #include "libswresample/swresample.h"
 
 }
+
+#define CONV_FP(x) ((double) (x)) / (1 << 16)
+#define CONV_DB(x) (int32_t) ((x) * (1 << 16))
+
 using namespace std;
 //表示处理消息的事件回调方法类型
 using streamClosehandler = std::function<void()>;
@@ -77,22 +81,33 @@ private:
 	void stream_toggle_pause();
 	void step_to_next_frame();
 
+	void insert_filt(AVFilterContext*& last_filter, AVFilterGraph* graph, const char* name, const char* arg);
+
+	double av_display_rotation_get(const int32_t matrix[9]);
+	void av_display_rotation_set(int32_t matrix[9], double angle);
+	double get_rotation(int32_t* displaymatrix);
+
+	int configure_video_filters(AVFilterGraph* graph, const char* vfilters, AVFrame* frame);
+	int queue_picture(AVFrame* src_frame, double pts, double duration, int64_t pos, int serial);
+	int get_video_frame(AVFrame* frame);
+
+
 	//调整音频帧的时间戳
 	int synchronize_audio(int nb_samples);
 	//更新音频样本的显示
 	void update_sample_display(short* samples, int samples_size);
 	int audio_decode_frame();
 
-
+	inline int cmp_audio_fmts(enum AVSampleFormat fmt1, int64_t channel_count1,
+		enum AVSampleFormat fmt2, int64_t channel_count2);
 	static void sdl_audio_callback(void* userdata, Uint8* stream, int len);
 	void audio_callback(Uint8* stream, int len);
-
 	int audio_open(AVChannelLayout* wanted_channel_layout, int wanted_sample_rate, 
 		struct AudioParams* audio_hw_params);
+
 	void audio_thread();
 	void video_thread();
 	void subtitle_thread();
-
 
 	void read_thread();
 
@@ -269,6 +284,10 @@ private:
 	int infinite_buffer = -1;//控制输入缓冲区行为
 	int loop = 1;	//播放循环
 	int autoexit;	//自动退出
+	int framedrop = -1;//丢帧
+	int autorotate = 1;//旋转
+
+	char** vfilters_list = nullptr;
 };
 
 int decode_interrupt_cb(void* ctx)

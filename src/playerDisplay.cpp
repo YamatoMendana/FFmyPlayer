@@ -32,7 +32,6 @@ PlayerDisplay::PlayerDisplay()
 	infinite_buffer = GlobalSingleton::getInstance()->getConfigValue<int>("infinite_buffer");
 	loop = GlobalSingleton::getInstance()->getConfigValue<int>("loop");
 	autoexit = GlobalSingleton::getInstance()->getConfigValue<int>("autoexit");
-
 }
 
 PlayerDisplay::~PlayerDisplay()
@@ -519,7 +518,6 @@ int PlayerDisplay::configure_filtergraph(AVFilterGraph* graph, const char* filte
 	return ret;
 }
 
-
 int PlayerDisplay::configure_audio_filters(const char* afilters, int force_output_format)
 {
 	int ret;
@@ -772,6 +770,261 @@ void PlayerDisplay::step_to_next_frame()
 	nStep = 1;
 }
 
+void PlayerDisplay::insert_filt(AVFilterContext*& last_filter, AVFilterGraph* graph, const char* name, const char* arg)
+{
+	int ret;
+	AVFilterContext* filt_ctx;
+
+	try {
+		ret = avfilter_graph_create_filter(&filt_ctx, avfilter_get_by_name(name), "ffplay_", arg, NULL, graph);
+		if (ret < 0) 
+		{
+			QString error = QString("create graph filter failed\n");
+			throw PlayerException(error.toStdString(), CREATE_GRAPH_FILTER_FAIL);
+		}
+
+		ret = avfilter_link(filt_ctx, 0, last_filter, 0);
+		if (ret < 0) 
+		{
+			QString error = QString("filter link failed\n");
+			throw PlayerException(error.toStdString(), FILTER_LINK_FAIL);
+		}
+
+		last_filter = filt_ctx;
+	}
+	catch (const PlayerException& e) {
+		throw; // 重新抛出异常，以便调用者可以处理
+	}
+}
+
+double PlayerDisplay::av_display_rotation_get(const int32_t matrix[9])
+{
+	double rotation, scale[2];
+
+	scale[0] = hypot(CONV_FP(matrix[0]), CONV_FP(matrix[3]));
+	scale[1] = hypot(CONV_FP(matrix[1]), CONV_FP(matrix[4]));
+
+	if (scale[0] == 0.0 || scale[1] == 0.0)
+		return NAN;
+
+	rotation = atan2(CONV_FP(matrix[1]) / scale[1],
+		CONV_FP(matrix[0]) / scale[0]) * 180 / M_PI;
+
+	return -rotation;
+}
+
+void PlayerDisplay::av_display_rotation_set(int32_t matrix[9], double angle)
+{
+	double radians = -angle * M_PI / 180.0f;
+	double c = cos(radians);
+	double s = sin(radians);
+
+	memset(matrix, 0, 9 * sizeof(int32_t));
+
+	matrix[0] = CONV_DB(c);
+	matrix[1] = CONV_DB(-s);
+	matrix[3] = CONV_DB(s);
+	matrix[4] = CONV_DB(c);
+	matrix[8] = 1 << 30;
+}
+
+double PlayerDisplay::get_rotation(int32_t* displaymatrix)
+{
+	double theta = 0;
+	if (displaymatrix)
+		theta = -round(av_display_rotation_get((int32_t*)displaymatrix));
+
+	theta -= 360 * floor(theta / 360 + 0.9 / 360);
+
+	if (fabs(theta - 90 * round(theta / 90)) > 2)
+		qDebug() << "Odd rotation angle.\n";
+
+	return theta;
+}
+
+int PlayerDisplay::configure_video_filters(AVFilterGraph* graph, const char* vfilters, AVFrame* frame)
+{
+	int ret;
+	enum AVPixelFormat pix_fmts[FF_ARRAY_ELEMS(sdl_texture_format_map)];
+	char sws_flags_str[512] = "";
+	char buffersrc_args[256];
+
+	AVFilterContext* filt_src = nullptr;
+	AVFilterContext* filt_out = nullptr;
+	AVFilterContext* last_filter = nullptr;
+
+	const AVDictionaryEntry* e = nullptr;
+	try
+	{
+		AVCodecParameters* codecpar = video_st->codecpar;
+		AVRational fr = av_guess_frame_rate(pFmtCtx, video_st, NULL);
+		
+		int nb_pix_fmts = 0;
+		int i, j;
+
+		for (i = 0; i < renderer_info.num_texture_formats; i++) {
+			for (j = 0; j < FF_ARRAY_ELEMS(sdl_texture_format_map) - 1; j++) {
+				if (renderer_info.texture_formats[i] == sdl_texture_format_map[j].texture_fmt) {
+					pix_fmts[nb_pix_fmts++] = sdl_texture_format_map[j].format;
+					break;
+				}
+			}
+		}
+		pix_fmts[nb_pix_fmts] = AV_PIX_FMT_NONE;
+
+		while ((e = av_dict_iterate(sws_dict, e))) {
+			if (!strcmp(e->key, "sws_flags")) {
+				av_strlcatf(sws_flags_str, sizeof(sws_flags_str), "%s=%s:", "flags", e->value);
+			}
+			else
+				av_strlcatf(sws_flags_str, sizeof(sws_flags_str), "%s=%s:", e->key, e->value);
+		}
+		if (strlen(sws_flags_str))
+			sws_flags_str[strlen(sws_flags_str) - 1] = '\0';
+
+		graph->scale_sws_opts = av_strdup(sws_flags_str);
+
+		snprintf(buffersrc_args, sizeof(buffersrc_args),
+			"video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+			frame->width, frame->height, frame->format,
+			video_st->time_base.num, video_st->time_base.den,
+			codecpar->sample_aspect_ratio.num, FFMAX(codecpar->sample_aspect_ratio.den, 1));
+		if (fr.num && fr.den)
+			av_strlcatf(buffersrc_args, sizeof(buffersrc_args), ":frame_rate=%d/%d", fr.num, fr.den);
+
+		//"buffer"在滤镜图中创建一个输入缓冲区
+		if ((ret = avfilter_graph_create_filter(&filt_src,
+			avfilter_get_by_name("buffer"),
+			"ffplay_buffer", buffersrc_args, NULL,
+			graph)) < 0)
+		{
+			QString error = QString("create graph filter failed\n");
+			throw PlayerException(error.toStdString(), CREATE_GRAPH_FILTER_FAIL);
+		}
+
+		ret = avfilter_graph_create_filter(&filt_out,
+			avfilter_get_by_name("buffersink"),
+			"ffplay_buffersink", NULL, NULL, graph);
+		if (ret < 0)
+		{
+			QString error = QString("create graph filter failed\n");
+			throw PlayerException(error.toStdString(), CREATE_GRAPH_FILTER_FAIL);
+		}
+
+		if ((ret = av_opt_set_int_list(filt_out, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN)) < 0)
+		{
+			QString error = QString("option set failed\n");
+			throw PlayerException(error.toStdString(), OPTIONAL_SET_FAIL);
+		}
+
+		last_filter = filt_out;
+
+		if (autorotate) {
+			double theta = 0.0;
+			int32_t* displaymatrix = NULL;
+			AVFrameSideData* sd = av_frame_get_side_data(frame, AV_FRAME_DATA_DISPLAYMATRIX);
+			if (sd)
+				displaymatrix = (int32_t*)sd->data;
+			if (!displaymatrix)
+				displaymatrix = (int32_t*)av_stream_get_side_data(video_st, AV_PKT_DATA_DISPLAYMATRIX, NULL);
+			theta = get_rotation(displaymatrix);
+
+			if (fabs(theta - 90) < 1.0) {//顺时针旋转
+				insert_filt(last_filter, graph,"transpose", "clock");
+			}
+			else if (fabs(theta - 180) < 1.0) {//水平垂直
+				insert_filt(last_filter,graph,"hflip", NULL);
+				insert_filt(last_filter, graph,"vflip", NULL);
+			}
+			else if (fabs(theta - 270) < 1.0) {//逆时针旋转
+				insert_filt(last_filter, graph,"transpose", "cclock");
+			}
+			else if (fabs(theta) > 1.0) {//旋转特定角度
+				char rotate_buf[64];
+				snprintf(rotate_buf, sizeof(rotate_buf), "%f*PI/180", theta);
+				insert_filt(last_filter, graph,"rotate", rotate_buf);
+			}
+		}
+
+		if ((ret = configure_filtergraph(graph, vfilters, filt_src, last_filter)) < 0)
+		{
+			QString error = QString("filtergraph configure failed\n");
+			throw PlayerException(error.toStdString(), FILTERGRAPH_CONFIGURE_FAIL);
+		}
+
+		pIn_video_filter = filt_src;
+		pOut_video_filter = filt_out;
+	}
+	catch (const PlayerException& e)
+	{
+		qDebug() << "PlayerException: " << e.what() << "Error code:" << e.getErrorCode();
+	}
+
+	return ret;
+}
+
+int PlayerDisplay::queue_picture(AVFrame* src_frame, double pts, double duration, int64_t pos, int serial)
+{
+	Frame* vp;
+
+	if (!(vp = pictq.frame_queue_peek_writable()))
+		return -1;
+
+	vp->sar = src_frame->sample_aspect_ratio;
+	vp->uploaded = 0;
+
+	vp->width = src_frame->width;
+	vp->height = src_frame->height;
+	vp->format = src_frame->format;
+
+	vp->pts = pts;
+	vp->duration = duration;
+	vp->pos = pos;
+	vp->serial = serial;
+
+	av_frame_move_ref(vp->frame, src_frame);
+	pictq.frame_queue_push();
+	return 0;
+}
+
+int PlayerDisplay::get_video_frame(AVFrame* frame)
+{
+	int got_picture;
+
+	if ((got_picture = viddec.decoder_decode_frame(frame, NULL)) < 0)
+		return -1;
+
+	if (got_picture) {
+		//解码后的显示时间戳
+		double dpts = NAN;
+
+		if (frame->pts != AV_NOPTS_VALUE)
+			//dpts=PTS×time_base
+			dpts = av_q2d(video_st->time_base) * frame->pts;
+
+		//猜测视频帧的样本宽高比
+		frame->sample_aspect_ratio = av_guess_sample_aspect_ratio(pFmtCtx, video_st, frame);
+
+		if (framedrop > 0 || (framedrop && get_master_sync_type() != AV_SYNC_VIDEO_MASTER)) {
+			if (frame->pts != AV_NOPTS_VALUE) {
+				double diff = dpts - get_master_clock();
+				if (!isnan(diff) && fabs(diff) < AV_NOSYNC_THRESHOLD &&
+					diff - nFrame_last_filter_delay < 0 &&
+					viddec.get_serial() == vidclk.get_serial() &&
+					videoq.get_nb_packets()
+					) 
+				{
+					nFrame_drops_early++;
+					av_frame_unref(frame);
+					got_picture = 0;
+				}
+			}
+		}
+	}
+
+	return got_picture;
+}
+
 int PlayerDisplay::synchronize_audio(int nb_samples)
 {
 	int wanted_nb_samples = nb_samples;
@@ -948,6 +1201,14 @@ int PlayerDisplay::audio_decode_frame()
 	return resampled_data_size;
 }
 
+int PlayerDisplay::cmp_audio_fmts(enum AVSampleFormat fmt1, int64_t channel_count1, enum AVSampleFormat fmt2, int64_t channel_count2)
+{
+	if (channel_count1 == 1 && channel_count2 == 1)
+		return av_get_packed_sample_fmt(fmt1) != av_get_packed_sample_fmt(fmt2);
+	else
+		return channel_count1 != channel_count2 || fmt1 != fmt2;
+}
+
 void PlayerDisplay::sdl_audio_callback(void* opaque, Uint8* stream, int len)
 {
 	PlayerDisplay* player = static_cast<PlayerDisplay*>(opaque);
@@ -1079,184 +1340,229 @@ int PlayerDisplay::audio_open(AVChannelLayout* wanted_channel_layout, int wanted
 void PlayerDisplay::audio_thread()
 {
 	int ret = 0;
-//	AVFrame* frame = av_frame_alloc();
-//	Frame* af;
-//	int last_serial = -1;
-//	int reconfigure;
-//	int got_frame = 0;
-//	AVRational tb;
-//	
-//
-//	if (!frame)
-//		return AVERROR(ENOMEM);
-//
-//	do {
-//		if ((got_frame = decoder_decode_frame(&is->auddec, frame, NULL)) < 0)
-//			goto the_end;
-//
-//		if (got_frame) {
-//			tb = (AVRational){ 1, frame->sample_rate };
-//
-//			reconfigure =
-//				cmp_audio_fmts(is->audio_filter_src.fmt, is->audio_filter_src.ch_layout.nb_channels,
-//					frame->format, frame->ch_layout.nb_channels) ||
-//				av_channel_layout_compare(&is->audio_filter_src.ch_layout, &frame->ch_layout) ||
-//				is->audio_filter_src.freq != frame->sample_rate ||
-//				is->auddec.pkt_serial != last_serial;
-//
-//			if (reconfigure) {
-//				char buf1[1024], buf2[1024];
-//				av_channel_layout_describe(&is->audio_filter_src.ch_layout, buf1, sizeof(buf1));
-//				av_channel_layout_describe(&frame->ch_layout, buf2, sizeof(buf2));
-//				av_log(NULL, AV_LOG_DEBUG,
-//					"Audio frame changed from rate:%d ch:%d fmt:%s layout:%s serial:%d to rate:%d ch:%d fmt:%s layout:%s serial:%d\n",
-//					is->audio_filter_src.freq, is->audio_filter_src.ch_layout.nb_channels, av_get_sample_fmt_name(is->audio_filter_src.fmt), buf1, last_serial,
-//					frame->sample_rate, frame->ch_layout.nb_channels, av_get_sample_fmt_name(frame->format), buf2, is->auddec.pkt_serial);
-//
-//				is->audio_filter_src.fmt = frame->format;
-//				ret = av_channel_layout_copy(&is->audio_filter_src.ch_layout, &frame->ch_layout);
-//				if (ret < 0)
-//					goto the_end;
-//				is->audio_filter_src.freq = frame->sample_rate;
-//				last_serial = is->auddec.pkt_serial;
-//
-//				if ((ret = configure_audio_filters(is, afilters, 1)) < 0)
-//					goto the_end;
-//			}
-//
-//			//视频帧或音频帧添加到缓冲区源滤镜
-//			if ((ret = av_buffersrc_add_frame(is->in_audio_filter, frame)) < 0)
-//				goto the_end;
-//
-//			//从缓冲区接收器滤镜（buffer sink filter）中获取一个视频帧或音频帧
-//			while ((ret = av_buffersink_get_frame_flags(is->out_audio_filter, frame, 0)) >= 0) {
-//				FrameData* fd = frame->opaque_ref ? (FrameData*)frame->opaque_ref->data : NULL;
-//				tb = av_buffersink_get_time_base(is->out_audio_filter);
-//				if (!(af = frame_queue_peek_writable(&is->sampq)))
-//					goto the_end;
-//
-//				af->pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
-//				af->pos = fd ? fd->pkt_pos : -1;
-//				af->serial = is->auddec.pkt_serial;
-//				af->duration = av_q2d((AVRational) { frame->nb_samples, frame->sample_rate });
-//
-//				av_frame_move_ref(af->frame, frame);
-//				frame_queue_push(&is->sampq);
-//
-//				if (is->audioq.serial != is->auddec.pkt_serial)
-//					break;
-//			}
-//			if (ret == AVERROR_EOF)
-//				is->auddec.finished = is->auddec.pkt_serial;
-//		}
-//	} while (ret >= 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF);
-//the_end:
-//	avfilter_graph_free(&is->agraph);
-//	av_frame_free(&frame);
+	AVFrame* frame = nullptr;
+	Frame* af;
+	int last_serial = -1;
+	int reconfigure;
+	int got_frame = 0;
+	AVRational tb;
+	
+	try
+	{
+		AVFrame* frame = av_frame_alloc();
+		if (!frame)
+		{
+			QString error = QString("frame alloc failed\n");
+			throw PlayerException(error.toStdString(), FRAME_ALLOC_FAIL);
+		}
+		do {
+			if ((got_frame = auddec.decoder_decode_frame(frame, nullptr)) < 0)
+			{
+				QString error = QString("decode frame failed\n");
+				throw PlayerException(error.toStdString(), DECODER_DECODE_FAIL);
+			}
+
+			if (got_frame) {
+				tb = { 1, frame->sample_rate };
+
+				reconfigure =
+					cmp_audio_fmts(struAudio_filter_src.fmt, struAudio_filter_src.ch_layout.nb_channels,
+						(AVSampleFormat)frame->format, frame->ch_layout.nb_channels) ||
+					av_channel_layout_compare(&struAudio_filter_src.ch_layout, &frame->ch_layout) ||
+					struAudio_filter_src.freq != frame->sample_rate ||
+					auddec.get_serial() != last_serial;
+
+				if (reconfigure) {
+					char buf1[1024], buf2[1024];
+					av_channel_layout_describe(&struAudio_filter_src.ch_layout, buf1, sizeof(buf1));
+					av_channel_layout_describe(&frame->ch_layout, buf2, sizeof(buf2));
+
+					QString info = QString("Audio frame changed from rate:%1 ch:%2 fmt:%3 layout:%4 serial:%5 to rate:%6 ch:%7 fmt:%8 layout:%9 serial:%10\n")
+						.arg(struAudio_filter_src.freq).arg(struAudio_filter_src.ch_layout.nb_channels).arg(av_get_sample_fmt_name(struAudio_filter_src.fmt))
+						.arg(buf1).arg(last_serial).arg(frame->sample_rate).arg(frame->ch_layout.nb_channels).arg(av_get_sample_fmt_name((AVSampleFormat)frame->format))
+						.arg(buf2).arg(auddec.get_serial());
+
+
+					struAudio_filter_src.fmt = (AVSampleFormat)frame->format;
+					ret = av_channel_layout_copy(&struAudio_filter_src.ch_layout, &frame->ch_layout);
+					if (ret < 0)
+					{
+						QString error = QString("channel_layout copy failed\n");
+						throw PlayerException(error.toStdString(), CHANNAL_LAYOUT_COPY_FAIL);
+					}
+					struAudio_filter_src.freq = frame->sample_rate;
+					last_serial = auddec.get_serial();
+
+					if ((ret = configure_audio_filters(afilters, 1)) < 0)
+					{
+						QString error = QString("audio filters configure failed\n");
+						throw PlayerException(error.toStdString(), AUDIO_FILTER_CONFIGURE_FAIL);
+					}
+				}
+
+				//视频帧或音频帧添加到缓冲区源滤镜
+				if ((ret = av_buffersrc_add_frame(pIn_audio_filter, frame)) < 0)
+				{
+					QString error = QString("add frame to buffersrc failed\n");
+					throw PlayerException(error.toStdString(), ADD_FRAME_FAIL);
+				}
+
+				//从缓冲区接收器滤镜（buffer sink filter）中获取一个视频帧或音频帧
+				while ((ret = av_buffersink_get_frame_flags(pOut_audio_filter, frame, 0)) >= 0) {
+					FrameData* fd = frame->opaque_ref ? (FrameData*)frame->opaque_ref->data : NULL;
+					tb = av_buffersink_get_time_base(pOut_audio_filter);
+					if (!(af = sampq.frame_queue_peek_writable()))
+					{
+						QString error = QString("framelist peek failed\n");
+						throw PlayerException(error.toStdString(), FRAMELIST_PEEK_FAIL);
+					}
+
+					af->pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
+					af->pos = fd ? fd->pkt_pos : -1;
+					af->serial = auddec.get_serial();
+					af->duration = av_q2d({ frame->nb_samples, frame->sample_rate });
+
+					av_frame_move_ref(af->frame, frame);
+					sampq.frame_queue_push();
+
+					if (audioq.get_serial() != auddec.get_serial())
+						break;
+				}
+				if (ret == AVERROR_EOF)
+					auddec.set_finished(auddec.get_serial());
+			}
+		} while (ret >= 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF);
+	}
+	catch (const PlayerException& e)
+	{
+		qDebug() << "PlayerException: " << e.what() << "Error code:" << e.getErrorCode();
+	}
+	avfilter_graph_free(&pAgraph);
+	av_frame_free(&frame);
+	
 	return;
 }
 
 void PlayerDisplay::video_thread()
 {
 	int ret;
-//	VideoState* is = arg;
-//	AVFrame* frame = av_frame_alloc();
-//	double pts;
-//	double duration;
+	AVFrame* frame = nullptr;av_frame_alloc();
+	double pts;
+	double duration;
+	AVFilterGraph* graph = nullptr;
+	AVFilterContext* filt_out = nullptr;
+	AVFilterContext* filt_in = nullptr;
 
-//	AVRational tb = is->video_st->time_base;
-//	AVRational frame_rate = av_guess_frame_rate(is->ic, is->video_st, NULL);
-//
-//	AVFilterGraph* graph = NULL;
-//	AVFilterContext* filt_out = NULL, * filt_in = NULL;
-//	int last_w = 0;
-//	int last_h = 0;
-//	enum AVPixelFormat last_format = -2;
-//	int last_serial = -1;
-//	int last_vfilter_idx = 0;
-//
-//	if (!frame)
-//		return AVERROR(ENOMEM);
-//
-//	for (;;) {
-//		ret = get_video_frame(is, frame);
-//		if (ret < 0)
-//			goto the_end;
-//		if (!ret)
-//			continue;
-//
-//		if (last_w != frame->width
-//			|| last_h != frame->height
-//			|| last_format != frame->format
-//			|| last_serial != is->viddec.pkt_serial
-//			|| last_vfilter_idx != is->vfilter_idx) {
-//			av_log(NULL, AV_LOG_DEBUG,
-//				"Video frame changed from size:%dx%d format:%s serial:%d to size:%dx%d format:%s serial:%d\n",
-//				last_w, last_h,
-//				(const char*)av_x_if_null(av_get_pix_fmt_name(last_format), "none"), last_serial,
-//				frame->width, frame->height,
-//				(const char*)av_x_if_null(av_get_pix_fmt_name(frame->format), "none"), is->viddec.pkt_serial);
-//			avfilter_graph_free(&graph);
-//			graph = avfilter_graph_alloc();
-//			if (!graph) {
-//				ret = AVERROR(ENOMEM);
-//				goto the_end;
-//			}
-//			graph->nb_threads = filter_nbthreads;
-//			if ((ret = configure_video_filters(graph, is, vfilters_list ? vfilters_list[is->vfilter_idx] : NULL, frame)) < 0) {
-//				SDL_Event event;
-//				event.type = FF_QUIT_EVENT;
-//				event.user.data1 = is;
-//				SDL_PushEvent(&event);
-//				goto the_end;
-//			}
-//			filt_in = is->in_video_filter;
-//			filt_out = is->out_video_filter;
-//			last_w = frame->width;
-//			last_h = frame->height;
-//			last_format = frame->format;
-//			last_serial = is->viddec.pkt_serial;
-//			last_vfilter_idx = is->vfilter_idx;
-//			frame_rate = av_buffersink_get_frame_rate(filt_out);
-//		}
-//
-//		ret = av_buffersrc_add_frame(filt_in, frame);
-//		if (ret < 0)
-//			goto the_end;
-//
-//		while (ret >= 0) {
-//			FrameData* fd;
-//
-//			is->frame_last_returned_time = av_gettime_relative() / 1000000.0;
-//
-//			ret = av_buffersink_get_frame_flags(filt_out, frame, 0);
-//			if (ret < 0) {
-//				if (ret == AVERROR_EOF)
-//					is->viddec.finished = is->viddec.pkt_serial;
-//				ret = 0;
-//				break;
-//			}
-//
-//			fd = frame->opaque_ref ? (FrameData*)frame->opaque_ref->data : NULL;
-//
-//			is->frame_last_filter_delay = av_gettime_relative() / 1000000.0 - is->frame_last_returned_time;
-//			if (fabs(is->frame_last_filter_delay) > AV_NOSYNC_THRESHOLD / 10.0)
-//				is->frame_last_filter_delay = 0;
-//			tb = av_buffersink_get_time_base(filt_out);
-//			duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational) { frame_rate.den, frame_rate.num }) : 0);
-//			pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
-//			ret = queue_picture(is, frame, pts, duration, fd ? fd->pkt_pos : -1, is->viddec.pkt_serial);
-//			av_frame_unref(frame);
-//			if (is->videoq.serial != is->viddec.pkt_serial)
-//				break;
-//		}
-//
-//		if (ret < 0)
-//			goto the_end;
-//	}
-//the_end:
-//	avfilter_graph_free(&graph);
-//	av_frame_free(&frame);
+	int last_w = 0;
+	int last_h = 0;
+	enum AVPixelFormat last_format = (AVPixelFormat)(-2);
+	int last_serial = -1;
+	int last_vfilter_idx = 0;
+
+	try
+	{
+		frame = av_frame_alloc();
+		AVRational tb = video_st->time_base;
+		AVRational frame_rate = av_guess_frame_rate(pFmtCtx, video_st, NULL);
+
+		if (!frame)
+		{
+			QString error = QString("frame alloc failed\n");
+			throw PlayerException(error.toStdString(), FRAME_ALLOC_FAIL);
+		}
+
+		for (;;) {
+			ret = get_video_frame(frame);
+			if (ret < 0)
+			{
+				QString error = QString("get video frame failed\n");
+				throw PlayerException(error.toStdString(), VIDEO_FRAME_GET_FAIL);
+			}
+			if (!ret)
+				continue;
+
+			if (last_w != frame->width
+				|| last_h != frame->height
+				|| last_format != frame->format
+				|| last_serial != viddec.get_serial()
+				|| last_vfilter_idx != nVfilter_idx) {
+				QString error = QString("Video frame changed from size:%1x%2 format:%3 serial:%4 to size:%5x%6 format:%7 serial:%8\n")
+					.arg(last_w).arg(last_h)
+					.arg((const char*)av_x_if_null(av_get_pix_fmt_name(last_format), "none")).arg(last_serial)
+					.arg(frame->width).arg(frame->height)
+					.arg((const char*)av_x_if_null(av_get_pix_fmt_name((AVPixelFormat)frame->format), "none")).arg(viddec.get_serial());
+
+				avfilter_graph_free(&graph);
+				graph = avfilter_graph_alloc();
+				if (!graph) 
+				{
+					QString error = QString("graph alloc failed\n");
+					throw PlayerException(error.toStdString(), GRAPH_ALLOC_FAIL);
+				}
+				graph->nb_threads = filter_nbthreads;
+				if ((ret = configure_video_filters(graph, vfilters_list ? vfilters_list[nVfilter_idx] : nullptr, frame)) < 0)
+				{
+					QString error = QString("video filter configure failed\n");
+					throw PlayerException(error.toStdString(), VIDEO_FILTER_CONFIGURE_FAIL);
+				}
+				filt_in = pIn_video_filter;
+				filt_out = pOut_video_filter;
+				last_w = frame->width;
+				last_h = frame->height;
+				last_format = (AVPixelFormat)frame->format;
+				last_serial = viddec.get_serial();
+				last_vfilter_idx = nVfilter_idx;
+				frame_rate = av_buffersink_get_frame_rate(filt_out);
+			}
+
+			ret = av_buffersrc_add_frame(filt_in, frame);
+			if (ret < 0)
+			{
+				QString error = QString("add frame to buffersrc failed\n");
+				throw PlayerException(error.toStdString(), ADD_FRAME_FAIL);
+			}
+
+			while (ret >= 0) {
+				FrameData* fd;
+
+				nFrame_last_returned_time = av_gettime_relative() / 1000000.0;
+
+				ret = av_buffersink_get_frame_flags(filt_out, frame, 0);
+				if (ret < 0) {
+					if (ret == AVERROR_EOF)
+						viddec.set_finished(viddec.get_serial());
+					ret = 0;
+					break;
+				}
+
+				fd = frame->opaque_ref ? (FrameData*)frame->opaque_ref->data : NULL;
+
+				nFrame_last_filter_delay = av_gettime_relative() / 1000000.0 - nFrame_last_returned_time;
+				if (fabs(nFrame_last_filter_delay) > AV_NOSYNC_THRESHOLD / 10.0)
+					nFrame_last_filter_delay = 0;
+				tb = av_buffersink_get_time_base(filt_out);
+				duration = (frame_rate.num && frame_rate.den ? av_q2d({ frame_rate.den, frame_rate.num }) : 0);
+				pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
+				ret = queue_picture(frame, pts, duration, fd ? fd->pkt_pos : -1, viddec.get_serial());
+				if (ret < 0)
+				{
+					QString error = QString("add frame to list failed\n");
+					throw PlayerException(error.toStdString(), ADD_FRAME_FAIL);
+				}
+				av_frame_unref(frame);
+				if (videoq.get_serial() != viddec.get_serial())
+					break;
+			}
+
+
+		}
+	}
+	catch (const PlayerException& e)
+	{
+		qDebug() << "PlayerException: " << e.what() << "Error code:" << e.getErrorCode();
+	}
+	avfilter_graph_free(&graph);
+	av_frame_free(&frame);
 	return ;
 }
 

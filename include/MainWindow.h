@@ -2,15 +2,18 @@
 #define MAINWINDOW_H
 
 #include <QWidget>
+#include <shared_mutex>
+#include <memory>
+
 
 #include "title_bar.h"
 #include "playerWidget.h"
 #include "playerCtlWidget.h"
-
+#include "playerManager.h"
 
 class MainWindow:public QWidget
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
@@ -28,6 +31,9 @@ private:
     TitleBar* pTitleBar;
     PlayerWidget* pPlayWidget;
     PlayerCtlWidget* pPlayCtlWidget;
+    PlayerManager* pPlayManager;
+    
+    WId playWinId;
 
     int mousePosX = 0;
     int mousePosY = 0;

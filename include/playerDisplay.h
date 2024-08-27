@@ -1,300 +1,240 @@
-#ifndef __PLAYER_DISPLAY_H__
+ï»¿#ifndef __PLAYER_DISPLAY_H__
 #define __PLAYER_DISPLAY_H__
 
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <unordered_map>
+#include <future>
+#include <QObject>
+#include <QWidget>
 
-#include "SDL.h"
-
-#include "playerClock.h"
-#include "avFrameList.h"
-#include "decoder.h"
-
-extern "C"
-{
-#include "libavcodec/avcodec.h"
-#include "libavcodec/avfft.h"
-#include "libavutil/pixfmt.h"
-#include "libavutil/opt.h"
-#include "libavutil/imgutils.h"
-#include "libavutil/bprint.h"
-#include "libswscale/swscale.h"
-#include "libavdevice/avdevice.h"
-#include "libavfilter/avfilter.h"
-#include "libavfilter/buffersink.h"
-#include "libavfilter/buffersrc.h"
-#include "libswresample/swresample.h"
-
-}
-
-#define CONV_FP(x) ((double) (x)) / (1 << 16)
-#define CONV_DB(x) (int32_t) ((x) * (1 << 16))
+#include "dataStruct.h"
+#include "Common.h"
 
 using namespace std;
-//±íÊ¾´¦ÀíÏûÏ¢µÄÊÂ¼ş»Øµ÷·½·¨ÀàĞÍ
-using streamClosehandler = std::function<void()>;
+//è¡¨ç¤ºå¤„ç†æ¶ˆæ¯çš„äº‹ä»¶å›è°ƒæ–¹æ³•ç±»å‹
+using streamClosehandler = std::function<void(VideoState* is)>;
 
-void sigterm_handler(int sig) { exit(1); }
 
-class PlayerDisplay 
+class PlayerDisplay :public QObject
 {
+	Q_OBJECT
 public:
-	explicit PlayerDisplay();
+	explicit PlayerDisplay(QObject* parent = nullptr);
+
 	~PlayerDisplay();
+	int init();
+	bool startPlay(QString filename, WId widId);
+	VideoState* stream_open(const char* filename);
+	void stream_close(VideoState* is);
 
-	int stream_open(const char* filename);
+	//æš‚åœ
+	void toggle_pause(VideoState* is);
+	//é™éŸ³åˆ‡æ¢
+	void toggle_mute();
+	//ä¿®æ”¹éŸ³é‡
+	void update_volume(VideoState* is,int sign, double step);
+	//è·³æŒ‡å®šæ—¶é—´å¸§
+	void stream_seek(VideoState* is,int64_t pos, int64_t rel, int by_bytes);
+	//è·³åˆ°ä¸‹ä¸€å¸§
+	void step_to_next_frame(VideoState* is);
+	//è·³è½¬ç« èŠ‚
+	void seek_chapter(VideoState* is, int incr);
+	//åˆ‡æ¢æµç±»å‹
+	void stream_cycle_channel(VideoState* is, int codec_type);
 
-	void stream_close();
-
-	void get_default_windowSize(int* width,int* height, AVRational* sar);
 private:
-	void stream_component_close(int stream_index);
-	int stream_component_open(int stream_index);
+	void do_exit(VideoState*& is);
+	//æ’­æ”¾çŠ¶æ€åˆ‡æ¢
+	void stream_toggle_pause(VideoState* is);
+
+private:
+	//æ—‹è½¬
+	double display_rotation_get(const int32_t matrix[9]);
+	void display_rotation_set(int32_t matrix[9], double angle);
+	double get_rotation(int32_t* displaymatrix);
+	//å®æ—¶æµåˆ¤æ–­
+	int is_realtime(AVFormatContext* s);
+	double vp_duration(VideoState* is,Frame* vp, Frame* nextvp);
+	double compute_target_delay(VideoState* is,double delay);
+	inline int compute_mod(int a, int b) { return a < 0 ? a % b + b : a % b; }
+
+private:
+	//æ—¶é’Ÿ
+	double get_clock(Clock* c);
+	void set_clock_at(Clock* c, double pts, int serial, double time);
+	void set_clock(Clock* c, double pts, int serial);
+	void set_clock_speed(Clock* c, double speed);
+	void init_clock(Clock* c, int* queue_serial);
+	void sync_clock_to_slave(Clock* c, Clock* slave);
+	int get_master_sync_type(VideoState* is);//è·å–ä¸»æ—¶é’Ÿç±»å‹
+	double get_master_clock(VideoState* is);
+	void check_external_clock_speed(VideoState* is);
+	void update_video_pts(VideoState* is,double pts, int serial);
+
+	//çª—å£
+	void set_default_window_size(int width, int height, AVRational sar);
+	void calculate_display_rect(SDL_Rect* rect,
+		int scr_xleft, int scr_ytop,
+		int scr_width, int scr_height,
+		int pic_width, int pic_height, AVRational pic_sar);
+
+private:
+	int stream_component_open(VideoState* is,int stream_index);
+	void stream_component_close(VideoState* is,int stream_index);
+	//å…³é—­éŸ³é¢‘æµ
+	void audioStreamClose(VideoState* is);
+	//å…³é—­è§†é¢‘æµ
+	void videoStreamClose(VideoState* is);
+	//å…³é—­å­—å¹•æµ
+	void subtitleStreamClose(VideoState* is);
+	streamClosehandler getHandler(int codec_type);
+	//éŸ³é¢‘å¸§è§£ç 
+	int audio_decode_frame(VideoState* is);
+
+	inline void fill_rectangle(int x, int y, int w, int h);
+	void get_sdl_pix_fmt_and_blendmode(int format, Uint32* sdl_pix_fmt, SDL_BlendMode* sdl_blendmode);
+
+	int realloc_texture(SDL_Texture** texture, Uint32 new_format, int new_width, int new_height, SDL_BlendMode blendmode, int init_texture);
+	int upload_texture(SDL_Texture** tex, AVFrame* frame);
+
+	void set_sdl_yuv_conversion_mode(AVFrame* frame);
+	void video_image_display(VideoState* is);
+	void video_audio_display(VideoState* is);
+
+	void video_display(VideoState* is);
+	int video_open(VideoState* is);
+	void video_refresh(void* opaque, double* remaining_time);
+	void refresh_loop_wait_event(VideoState* is, SDL_Event* event);
+
 
 	
-	int check_stream_specifier(AVFormatContext* s, AVStream* st, const char* spec);
-	AVDictionary* filter_codec_opts(AVDictionary* opts, enum AVCodecID codec_id,
-		AVFormatContext* s, AVStream* st, const AVCodec* codec);
-	AVDictionary** setup_find_stream_info_opts(AVFormatContext* s, AVDictionary* codec_opts);
-
-	//ÅäÖÃÂË¾µÍ¼
+//è¿‡æ»¤å™¨
+	//é…ç½®æ»¤é•œå›¾
 	int configure_filtergraph(AVFilterGraph* graph, const char* filtergraph,
 		AVFilterContext* source_ctx, AVFilterContext* sink_ctx);
-	int configure_audio_filters(const char* afilters, int force_output_format);
-
-	int is_realtime(AVFormatContext* s);
-
-	//»ñÈ¡Ö÷Ê±ÖÓÀàĞÍ
-	int get_master_sync_type();
-	double get_master_clock();
-
+	int insert_vfilter(char* arg);
+	//åŠ å…¥æ»¤é•œ
+	void insert_filter(AVFilterContext*& last_filter, AVFilterGraph* graph, const char* name, const char* arg);
+	//éŸ³é¢‘è¿‡æ»¤å™¨é…ç½®
+	int configure_audio_filters(VideoState* is,const char* afilters, int force_output_format);
+	//è§†é¢‘è¿‡æ»¤å™¨é…ç½®
+	int configure_video_filters(AVFilterGraph* graph, VideoState* is,const char* vfilters, AVFrame* frame);
 	
-	void audioStreamClose();
-	void videoStreamClose();
-	void subtitleStreamClose();
-	streamClosehandler getHandler(int codec_type);
+	//æµæ˜¯å¦æœ‰è¶³å¤Ÿçš„åŒ…è¿›è¡Œæ’­æ”¾
+	int stream_has_enough_packets(AVStream* st, int stream_id, PacketQueue* queue);
 
-	int stream_has_enough_packets(AVStream* st, int stream_id, AvPacketList* list);
-	void stream_seek(int64_t pos, int64_t rel, int by_bytes);
-	void stream_toggle_pause();
-	void step_to_next_frame();
+//è§†é¢‘éƒ¨åˆ†
+	//è§†é¢‘å¸§åŠ å…¥é˜Ÿåˆ—
+	int queue_picture(VideoState* is, AVFrame* src_frame, double pts, double duration, int64_t pos, int serial);
+	//è·å–è§†é¢‘å¸§
+	int get_video_frame(VideoState* is, AVFrame* frame);
 
-	void insert_filt(AVFilterContext*& last_filter, AVFilterGraph* graph, const char* name, const char* arg);
-
-	double av_display_rotation_get(const int32_t matrix[9]);
-	void av_display_rotation_set(int32_t matrix[9], double angle);
-	double get_rotation(int32_t* displaymatrix);
-
-	int configure_video_filters(AVFilterGraph* graph, const char* vfilters, AVFrame* frame);
-	int queue_picture(AVFrame* src_frame, double pts, double duration, int64_t pos, int serial);
-	int get_video_frame(AVFrame* frame);
-
-
-	//µ÷ÕûÒôÆµÖ¡µÄÊ±¼ä´Á
-	int synchronize_audio(int nb_samples);
-	//¸üĞÂÒôÆµÑù±¾µÄÏÔÊ¾
-	void update_sample_display(short* samples, int samples_size);
-	int audio_decode_frame();
-
+//éŸ³é¢‘éƒ¨åˆ†
+	//è°ƒæ•´éŸ³é¢‘å¸§çš„æ—¶é—´æˆ³
+	int synchronize_audio(VideoState* is,int nb_samples);
+	//æ¯”è¾ƒéŸ³é¢‘æ ¼å¼
 	inline int cmp_audio_fmts(enum AVSampleFormat fmt1, int64_t channel_count1,
 		enum AVSampleFormat fmt2, int64_t channel_count2);
-	static void sdl_audio_callback(void* userdata, Uint8* stream, int len);
+
+	void update_sample_display(VideoState* is,short* samples, int samples_size);
 	void audio_callback(Uint8* stream, int len);
-	int audio_open(AVChannelLayout* wanted_channel_layout, int wanted_sample_rate, 
+	static void sdl_audio_callback(void* opaque, Uint8* stream, int len);
+	//æ‰“å¼€éŸ³é¢‘
+	int audio_open(AVChannelLayout* wanted_channel_layout, int wanted_sample_rate,
 		struct AudioParams* audio_hw_params);
 
-	void audio_thread();
-	void video_thread();
-	void subtitle_thread();
+	//è§£ç å›è°ƒ
+	static int decode_interrupt_cb(void* ctx);
 
-	void read_thread();
+	int audio_thread(void* arg);
+	int video_thread(void* arg);
+	int subtitle_thread(void* arg);
 
-public:
-	inline int get_Abort_request() { return bAbort_request; }
-private:
-	enum ShowMode {
-		SHOW_MODE_NONE = -1, 
-		SHOW_MODE_VIDEO = 0, 
-		SHOW_MODE_WAVES, 
-		SHOW_MODE_RDFT, 
-		SHOW_MODE_NB
-	} show_mode;
-
-	// Í¬²½Æ÷£¬ÓÃÓÚÒôÊÓÆµÍ¬²½
-	PlayerClock audclk;
-	PlayerClock vidclk;
-	PlayerClock extclk;
-
-	// Ïß³ÌÏà¹Ø
-	std::mutex mutex;	//»¥³âËø
-	std::condition_variable cond;	//Ìõ¼ş±äÁ¿
-
-	bool bAbort_request;			//Ïß³ÌÖĞ¶Ï±êÖ¾
-
-	//×Öµä
-	AVDictionary* sws_dict;		//´æ´¢ÓëÍ¼ÏñËõ·ÅÑ¡Ïî
-	AVDictionary* swr_opts;		//´æ´¢ÒôÆµÖØ²ÉÑùÑ¡Ïî
-	AVDictionary* format_opts;	//´æ´¢ÊäÈë/Êä³ö¸ñÊ½Ñ¡Ïî
-	AVDictionary* codec_opts;	//´æ´¢±à½âÂëÆ÷Ñ¡Ïî
-
-	// ÎÄ¼şÏà¹Ø
-	AVFormatContext* pFmtCtx;	// ¸ñÊ½ÉÏÏÂÎÄ
-	AVInputFormat* pIformat;	//´æ´¢ÊäÈëÎÄ¼şµÄ¸ñÊ½ĞÅÏ¢
-	int nEof;					// ÎÄ¼ş½áÊø±êÖ¾
-	char* pFilename;			// ÎÄ¼şÃû
-
-	// Á÷Ïà¹Ø
-	AVStream* audio_st;
-	AVStream* video_st;
-	AVStream* subtitle_st;
-	int nVideo_stream;     // ÊÓÆµÁ÷Ë÷Òı
-	int nAudio_stream;     // ÒôÆµÁ÷Ë÷Òı
-	int nSubtitle_stream;  // ×ÖÄ»Á÷Ë÷Òı
-
-	const char* wanted_stream_spec[AVMEDIA_TYPE_NB] = { 0 };	//´æ´¢Ö¸¶¨µÄÁ÷¹æ·¶
-	int nSt_index[5];
-
-	// ½âÂëÆ÷Ïà¹Ø
-	Decoder auddec;		// ÒôÆµ½âÂëÆ÷ÉÏÏÂÎÄ
-	Decoder viddec;		// ÊÓÆµ½âÂëÆ÷ÉÏÏÂÎÄ
-	Decoder subdec;		// ×ÖÄ»½âÂëÆ÷ÉÏÏÂÎÄ
-
-	const char* audio_codec_name;
-	const char* subtitle_codec_name;
-	const char* video_codec_name;
-
-	// Ö¡¶ÓÁĞ
-	AvFrameList pictq;  // ÊÓÆµÖ¡¶ÓÁĞ
-	AvFrameList sampq;  // ÒôÆµÖ¡¶ÓÁĞ
-	AvFrameList subpq;  // ×ÖÄ»Ö¡¶ÓÁĞ
-
-	// °ü¶ÓÁĞ
-	AvPacketList videoq;	// ÊÓÆµ°ü¶ÓÁĞ
-	AvPacketList audioq;	// ÒôÆµ°ü¶ÓÁĞ
-	AvPacketList subtitleq; // ×ÖÄ»°ü¶ÓÁĞ
-
-	// ²¥·ÅËÙ¶È¿ØÖÆ
-	int64_t seek_pos;	// Ìø×ªÎ»ÖÃ
-	int seek_req;		// Ìø×ªÇëÇó±êÖ¾
-//¶¨Î»±êÖ¾£ºAVSEEK_FLAG_BACKWARD: Ïòºó²éÕÒ×î½üµÄ¼üÖ¡
-// AVSEEK_FLAG_BYTE: °´×Ö½Ú¶¨Î»
-// AVSEEK_FLAG_ANY: ¶¨Î»µ½ÈÎÒâÖ¡(²»Ò»¶¨ÊÇ¼üÖ¡£©
-// AVSEEK_FLAG_FRAME: °´Ö¡¶¨Î»¡£
-	int seek_flags;		// Ìø×ª±êÖ¾
-	int64_t nSeek_rel;	//²¥·ÅÌø×ªÆ«ÒÆÁ¿
-
-	// ²¥·Å×´Ì¬
-	int nPaused;       // ÔİÍ£×´Ì¬
-	int nLast_paused;	// ÉÏÒ»´ÎÔİÍ£×´Ì¬
-	int nAttachments_req; // ÇëÇó¶ÓÁĞ¸½¼ş
-	int64_t duration = AV_NOPTS_VALUE;
-
-	//ÒôÆµÏà¹Ø
-	int nAv_sync_type;					// ÒôÊÓÆµÍ¬²½ÀàĞÍ
-	int nAudio_hw_buf_size;				// ÒôÆµÓ²¼ş»º³åÇø´óĞ¡
-	uint8_t* pAudio_buf;				// ÒôÆµ»º³åÇø
-	uint8_t* pAudio_buf1;				// ±¸ÓÃÒôÆµ»º³åÇø
-	unsigned int nAudio_buf_size;		// ÒôÆµ»º³åÇø´óĞ¡£¨×Ö½Ú£©
-	unsigned int nAudio_buf1_size;		// ±¸ÓÃÒôÆµ»º³åÇø´óĞ¡
-	int nAudio_buf_index;				// ÒôÆµ»º³åÇøË÷Òı£¨×Ö½Ú£©
-	int nAudio_write_buf_size;			// ÒôÆµĞ´Èë»º³åÇø´óĞ¡
-	int nAudio_volume;					// ÒôÆµÒôÁ¿
-	bool bMuted;						// ÊÇ·ñ¾²Òô
-
-	struct AudioParams struAudio_src;			// ÒôÆµÔ´²ÎÊı
-	struct AudioParams struAudio_filter_src;	// ÒôÆµÂË²¨Æ÷Ô´²ÎÊı
-	struct AudioParams struAudio_tgt;			// ÒôÆµÄ¿±ê²ÎÊı
-	struct SwrContext* pSwr_ctx;				// ÒôÆµÖØ²ÉÑùÉÏÏÂÎÄ
-
-	int nFrame_drops_early;	// ÔçÆÚ¶ªÖ¡Êı
-	int nFrame_drops_late;	// ÍíÆÚ¶ªÖ¡Êı
-
-	char* afilters = nullptr;	//ÒôÆµ¹ıÂËÆ÷²ÎÊı
-
-	//ÒôÆµÊ±ÖÓÏà¹Ø
-	double nAudio_clock;				// ÒôÆµÊ±ÖÓ
-	int nAudio_clock_serial;			// ÒôÆµÊ±ÖÓĞòÁĞºÅ
-	double nAudio_diff_cum;				// ÒôÆµ²îÒìÀÛ»ı
-	double nAudio_diff_avg_coef;		// ÒôÆµ²îÒìÆ½¾ùÏµÊı
-	double nAudio_diff_threshold;		// ÒôÆµ²îÒìãĞÖµ
-	int nAudio_diff_avg_count;			// ÒôÆµ²îÒìÆ½¾ù¼ÆÊı
-
-	//ÊÓÆµÏà¹Ø
-	int nForce_refresh;		// Ç¿ÖÆË¢ĞÂ
-	int nRead_pause_return;	// ¶ÁÈ¡ÔİÍ£·µ»ØÖµ
-	int nRealtime;			// ÊÇ·ñÊµÊ±Á÷
-	int nLast_i_start;		// ×îºóÒ»¸ö I Ö¡µÄÆğÊ¼Î»ÖÃ
-
-	double nFrame_timer;					// Ö¡¼ÆÊ±Æ÷
-	double nFrame_last_returned_time;	// ÉÏÒ»Ö¡·µ»ØÊ±¼ä
-	double nFrame_last_filter_delay;		// ÉÏÒ»Ö¡ÂË²¨ÑÓ³Ù
-	double nMax_frame_duration;			// ×î´óÖ¡³ÖĞøÊ±¼ä
-
-	int nVfilter_idx;
-	AVFilterContext* pIn_video_filter;   // ÊÓÆµÁ´µÄµÚÒ»¸öÂË²¨Æ÷
-	AVFilterContext* pOut_video_filter;  // ÊÓÆµÁ´µÄ×îºóÒ»¸öÂË²¨Æ÷
-	AVFilterContext* pIn_audio_filter;   // ÒôÆµÁ´µÄµÚÒ»¸öÂË²¨Æ÷
-	AVFilterContext* pOut_audio_filter;  // ÒôÆµÁ´µÄ×îºóÒ»¸öÂË²¨Æ÷
-	AVFilterGraph* pAgraph;				// ÒôÆµÂË²¨Æ÷Í¼
-
-	int nLast_video_stream;		//×îºóÒ»¸öÊÓÆµÁ÷
-	int nLast_audio_stream;		//×îºóÒ»¸öÒôÆµÁ÷
-	int nLast_subtitle_stream;	//×îºóÒ»¸ö×ÖÄ»Á÷
-
-	int nStep;	// ²½½ø
-	int lowres = 0;	//ÊÇ·ñµÍ»­ÖÊ
-	int fast = 0;	
-
-	//×ÖÄ»Ïà¹Ø
-	struct SwsContext* pSub_convert_ctx;	// ×ÖÄ»×ª»»ÉÏÏÂÎÄ
-
-	//ÔÓÀà
-	int16_t sample_array[SAMPLE_ARRAY_SIZE];	// Ñù±¾Êı×é
-	int nSample_array_index;
-
-	RDFTContext* pRdft;		// ¿ìËÙ¸µÀïÒ¶±ä»»ÉÏÏÂÎÄ
-	int nRdft_bits;			// ¿ìËÙ¸µÀïÒ¶±ä»»Î»Êı
-	FFTSample* pRdft_data;	// ¿ìËÙ¸µÀïÒ¶±ä»»Êı¾İ
-
-	bool bFind_stream_info = true;
+	void read_thread(VideoState* is);
+	void LoopThread(VideoState* cur_stream);
 	
 
+signals:
+	void sigStop();
+	void sigStopFinish();
+	void sigVideoPlaySeconds(double seconds);
+	void sigVideoTotalSeconds(int seconds);
+	void sigFileOpen(QString filename);
+	void sigVideoVolume(double val);
+	void sigPauseState(bool state);
+public slots:
 
-	int nXpos;	// X ×ø±êÎ»ÖÃ
-	// ÊÓÆµ¿í¶È¡¢¸ß¶È¡¢×óÉÏ½Ç X ºÍ Y ×ø±ê
-	int nWidth, nHeight, nXleft, nYtop;
-	double nLast_vis_time;	// ×îºó¿ÉÊÓ»¯Ê±¼ä
+public:
+	// çº¿ç¨‹ç›¸å…³
+	std::mutex mutex;	//äº’æ–¥é”
+	std::condition_variable cond;	//æ¡ä»¶å˜é‡
+	std::thread m_tPlayLoopThread;
 
-	//º¯Êı¹ÜÀí¾ä±ú
+	VideoState* pCurStream = nullptr;
+	WId m_widId;//æ’­æ”¾çª—å£
+	//å­—å…¸
+	AVDictionary* sws_dict = nullptr;		//å­˜å‚¨ä¸å›¾åƒç¼©æ”¾é€‰é¡¹
+	AVDictionary* swr_opts = nullptr;		//å­˜å‚¨éŸ³é¢‘é‡é‡‡æ ·é€‰é¡¹
+	AVDictionary* format_opts = nullptr;
+
+	const char* wanted_stream_spec[AVMEDIA_TYPE_NB] = { 0 };	//å­˜å‚¨æŒ‡å®šçš„æµè§„èŒƒ
+
+	bool bMuted = false;						// æ˜¯å¦é™éŸ³
+	int nStartup_volume = 100;					//åˆå§‹éŸ³é‡
+	int nCurrent_volume = 0;
+
+	double rdftspeed = 0.02; //å¿«é€Ÿå‚…é‡Œå¶å˜æ¢é€Ÿåº¦
+
+private:
+	SDL_Texture* pVis_texture = nullptr;	// å¯è§†åŒ–çº¹ç†
+	SDL_Texture* pSub_texture = nullptr;	// å­—å¹•çº¹ç†
+	SDL_Texture* pVid_texture = nullptr;	// è§†é¢‘çº¹ç†
+
+	SDL_Renderer* renderer = nullptr;
+	SDL_RendererInfo renderer_info = { 0 };
+	SDL_Window* window = nullptr;
+	SDL_AudioDeviceID audio_dev = 0;
+
+	int default_width;
+	int default_height;
+	int screen_width;
+	int screen_height;
+	int screen_left;
+	int screen_top;
+
+	int flags;
+	bool bFull_screen = false;
+
+//æ‚ç±»
+	//å‡½æ•°ç®¡ç†å¥æŸ„
 	unordered_map<int, streamClosehandler> um_stCloseHandlerMap;
-	SDL_AudioDeviceID audio_dev;
 
-	int filter_nbthreads;	//¹ıÂËÆ÷Ïß³ÌÊı
-	int64_t audio_callback_time;	//¼ÇÂ¼ÒôÆµ»Øµ÷º¯Êı±»µ÷ÓÃÊ±µÄÊ±¼ä´Á
-	int genpts;	//¸üĞÂPTS
-	int seek_by_bytes;
-	int64_t start_time;	//²¥·Å¿ªÊ¼Ê±¼ä
-	bool Audio_disable;//ÊÇ·ñ½ûÓÃÒôÆµ²¥·Å
-	bool Video_disable;//ÊÇ·ñ½ûÓÃÊÓÆµ²¥·Å
-	bool Subtitle_disable;//½ûÓÃ×ÖÄ»ÏÔÊ¾
-	bool Display_disable;//ÊÇ·ñ½ûÓÃÏÔÊ¾¹¦ÄÜ
+public:
+	int filter_nbthreads = 0;	//è¿‡æ»¤å™¨çº¿ç¨‹æ•°
+	int64_t audio_callback_time = 0;	//è®°å½•éŸ³é¢‘å›è°ƒå‡½æ•°è¢«è°ƒç”¨æ—¶çš„æ—¶é—´æˆ³
+	int genpts = 1;	//æ›´æ–°PTS
+	int64_t start_time = AV_NOPTS_VALUE;	//æ’­æ”¾å¼€å§‹æ—¶é—´
+	bool Audio_disable = false;//æ˜¯å¦ç¦ç”¨éŸ³é¢‘æ’­æ”¾
+	bool Video_disable = false;//æ˜¯å¦ç¦ç”¨è§†é¢‘æ’­æ”¾
+	bool Subtitle_disable = false;//ç¦ç”¨å­—å¹•æ˜¾ç¤º
+	bool Display_disable = false;//æ˜¯å¦ç¦ç”¨æ˜¾ç¤ºåŠŸèƒ½
 
-	int infinite_buffer = -1;//¿ØÖÆÊäÈë»º³åÇøĞĞÎª
-	int loop = 1;	//²¥·ÅÑ­»·
-	int autoexit;	//×Ô¶¯ÍË³ö
-	int framedrop = -1;//¶ªÖ¡
-	int autorotate = 1;//Ğı×ª
+	int infinite_buffer = -1;//æ§åˆ¶è¾“å…¥ç¼“å†²åŒºè¡Œä¸º
+	bool m_bloop = 1;	//æ’­æ”¾å¾ªç¯
+	int framedrop = -1;//ä¸¢å¸§
+	int autorotate = 1;//æ—‹è½¬
 
 	char** vfilters_list = nullptr;
+	int nNb_vfilters = 0;
+
+	char* afilters = nullptr;
+	bool bInit = false;//åˆå§‹åŒ–æ ‡å¿—
+
 };
 
-int decode_interrupt_cb(void* ctx)
-{
-	PlayerDisplay* is = (PlayerDisplay*)ctx;
-	return is->get_Abort_request();
-}
+
 
 
 

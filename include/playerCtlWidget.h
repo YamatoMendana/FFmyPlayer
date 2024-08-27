@@ -13,7 +13,7 @@ public:
     explicit PlayerCtlWidget(QWidget* parent = nullptr);
     ~PlayerCtlWidget();
 
-private:
+public:
     PlayerCtlButtons* pCtlBts = nullptr;
     PlayingInfo* pInfo = nullptr;
 

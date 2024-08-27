@@ -1,4 +1,4 @@
-#ifndef __Common_H__
+ï»¿#ifndef __Common_H__
 #define __Common_H__
 
 #include <iostream>
@@ -10,102 +10,7 @@
 #include <memory>
 #include <typeinfo>
 
-#include "SDL.h"
-
-extern "C"
-{
-#include "libavcodec/avcodec.h"
-}
-
-/* no AV correction is done if too big error */
-#define AV_NOSYNC_THRESHOLD 10.0
-#define SAMPLE_ARRAY_SIZE (8 * 65536)
-#define MAX_QUEUE_SIZE (15 * 1024 * 1024)
-#define MIN_FRAMES 25
-#define AUDIO_DIFF_AVG_NB   20
-#define SDL_AUDIO_MIN_BUFFER_SIZE 512
-//Ã¿ÃëÒôÆµ»Øµ÷µÄ×î´ó´ÎÊı
-#define SDL_AUDIO_MAX_CALLBACKS_PER_SEC 30
-//×î´óµÄÒôÆµËÙ¶È±ä»¯£¬ÒÔ»ñµÃÕıÈ·µÄÍ¬²½
-#define SAMPLE_CORRECTION_PERCENT_MAX 10
-
-static SDL_Window* window;
-static SDL_Renderer* renderer;
-static SDL_RendererInfo renderer_info = { 0 };
-static SDL_AudioDeviceID audio_dev;
-
-typedef struct Frame {
-	//Ö¡Êı¾İ
-	AVFrame* frame;
-	//×ÖÄ»Êı¾İ
-	AVSubtitle sub;
-	
-	int serial;
-	double pts;
-	double duration; 
-
-	int64_t pos;          
-	int width;
-	int height;
-	int format;
-	AVRational sar;
-	int uploaded;
-	int flip_v;
-} Frame;
-
-typedef struct MyAVPacketList {
-	AVPacket* pkt;
-	int serial;
-} MyAVPacketList;
-
-typedef struct FrameData {
-	int64_t pkt_pos;
-} FrameData;
-
-typedef struct AudioParams {
-	//ÒôÆµ²ÉÑùÂÊ£º44.1k£¬48k£¬ÄÎ¿üË¹ÌØ²ÉÑùÔ­Àí
-	int freq;
-	//Í¨µÀ²¼¾Ö
-	AVChannelLayout ch_layout;
-	enum AVSampleFormat fmt;
-	//ÒôÆµ»º³åÇø´óĞ¡£¬×Ö½Úµ¥Î»
-	int frame_size;
-	//Ã¿Ãë×Ö½ÚÊı
-	int bytes_per_sec;
-} AudioParams;
-
-
-static const struct TextureFormatEntry {
-	enum AVPixelFormat format;
-	int texture_fmt;
-} sdl_texture_format_map[] = {
-	{ AV_PIX_FMT_RGB8,           SDL_PIXELFORMAT_RGB332 },
-	{ AV_PIX_FMT_RGB444,         SDL_PIXELFORMAT_RGB444 },
-	{ AV_PIX_FMT_RGB555,         SDL_PIXELFORMAT_RGB555 },
-	{ AV_PIX_FMT_BGR555,         SDL_PIXELFORMAT_BGR555 },
-	{ AV_PIX_FMT_RGB565,         SDL_PIXELFORMAT_RGB565 },
-	{ AV_PIX_FMT_BGR565,         SDL_PIXELFORMAT_BGR565 },
-	{ AV_PIX_FMT_RGB24,          SDL_PIXELFORMAT_RGB24 },
-	{ AV_PIX_FMT_BGR24,          SDL_PIXELFORMAT_BGR24 },
-	{ AV_PIX_FMT_0RGB32,         SDL_PIXELFORMAT_RGB888 },
-	{ AV_PIX_FMT_0BGR32,         SDL_PIXELFORMAT_BGR888 },
-	{ AV_PIX_FMT_NE(RGB0, 0BGR), SDL_PIXELFORMAT_RGBX8888 },
-	{ AV_PIX_FMT_NE(BGR0, 0RGB), SDL_PIXELFORMAT_BGRX8888 },
-	{ AV_PIX_FMT_RGB32,          SDL_PIXELFORMAT_ARGB8888 },
-	{ AV_PIX_FMT_RGB32_1,        SDL_PIXELFORMAT_RGBA8888 },
-	{ AV_PIX_FMT_BGR32,          SDL_PIXELFORMAT_ABGR8888 },
-	{ AV_PIX_FMT_BGR32_1,        SDL_PIXELFORMAT_BGRA8888 },
-	{ AV_PIX_FMT_YUV420P,        SDL_PIXELFORMAT_IYUV },
-	{ AV_PIX_FMT_YUYV422,        SDL_PIXELFORMAT_YUY2 },
-	{ AV_PIX_FMT_UYVY422,        SDL_PIXELFORMAT_UYVY },
-	{ AV_PIX_FMT_NONE,           SDL_PIXELFORMAT_UNKNOWN },
-};
-
-enum {
-	AV_SYNC_AUDIO_MASTER, /* default choice */
-	AV_SYNC_VIDEO_MASTER,
-	AV_SYNC_EXTERNAL_CLOCK, /* synchronize to an external clock */
-};
+using namespace std;
 
 enum ErrorCode
 {
@@ -184,18 +89,16 @@ private:
 	int errorCode;
 };
 
-// ¶¨ÒåÒ»¸ö°üº¬¼¸ÖÖ²»Í¬ÀàĞÍµÄ variant
-using MyVariant = std::variant<bool, int, int64_t, Uint32, double
+// å®šä¹‰ä¸€ä¸ªåŒ…å«å‡ ç§ä¸åŒç±»å‹çš„ variant
+using MyVariant = std::variant<bool, int, int64_t, uint32_t, double
 	, char*, std::string
-	, SDL_Renderer*, SDL_RendererInfo*, SDL_Window*
 >;
-#undef main;
 
 class GlobalSingleton
 {
 public:
 	~GlobalSingleton() {}
-	// »ñÈ¡µ¥ÀıÊµÀı
+	// è·å–å•ä¾‹å®ä¾‹
 	static GlobalSingleton* getInstance() {
 		std::lock_guard<std::mutex> lock(mutex);
 		if (!instance) {
@@ -205,10 +108,10 @@ public:
 		return instance.get();
 	}
 
-	// »ñÈ¡ map ÖĞ³ÉÔ±µÄº¯Êı
+	// è·å– map ä¸­æˆå‘˜çš„å‡½æ•°
 	template<typename T>
 	T getConfigValue(const std::string& key) const {
-		std::shared_lock lock(rwlock); // ¶ÁËø
+		std::shared_lock lock(rwlock); // è¯»é”
 		auto it = configMap.find(key);
 		if (it != configMap.end()) {
 			try {
@@ -221,13 +124,13 @@ public:
 		else {
 			std::cerr << "Key not found: " << key << std::endl;
 		}
-		return T(); // ·µ»ØÄ¬ÈÏÖµ
+		return T(); // è¿”å›é»˜è®¤å€¼
 	}
 
-	// ĞŞ¸Ä map ÖĞ³ÉÔ±µÄº¯Êı
+	// ä¿®æ”¹ map ä¸­æˆå‘˜çš„å‡½æ•°
 	template<typename T>
 	void setConfigValue(const std::string& key, const T& value) {
-		std::unique_lock lock(rwlock); // Ğ´Ëø
+		std::unique_lock lock(rwlock); // å†™é”
 		auto it = configMap.find(key);
 		if (it != configMap.end()) {
 			try {
@@ -250,8 +153,8 @@ public:
 private:
 	GlobalSingleton();
 
-	GlobalSingleton(const GlobalSingleton&) = delete; // ½ûÓÃ¿½±´¹¹Ôìº¯Êı
-	GlobalSingleton& operator=(const GlobalSingleton&) = delete; // ½ûÓÃ¸³ÖµÔËËã·û
+	GlobalSingleton(const GlobalSingleton&) = delete; // ç¦ç”¨æ‹·è´æ„é€ å‡½æ•°
+	GlobalSingleton& operator=(const GlobalSingleton&) = delete; // ç¦ç”¨èµ‹å€¼è¿ç®—ç¬¦
 private:
 	static std::unique_ptr<GlobalSingleton> instance;
 	static std::mutex mutex;

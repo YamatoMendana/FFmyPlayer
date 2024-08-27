@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QDebug>
 #include <QFileDialog>
+#include <QWindow>
 
 #include "StyleSheet.h"
 
@@ -121,14 +122,14 @@ void PlayerCtlButtons::Open_clicked()
 		{
 			if (!filePath.isNull())
 			{
-				//播放文件
-
 				//获取文件名
 				QString filename = filePath.left(filePath.lastIndexOf("/") + 1);
 				//添加到播放列表
 
 			}
 		}
+		//播放第一个文件
+		emit sigPlayFile(filePaths[0]);
 	}
 
 }

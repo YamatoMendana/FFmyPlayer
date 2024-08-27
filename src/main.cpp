@@ -15,10 +15,6 @@ static void sigterm_handler(int sig)
 {
 	exit(123);
 }
-extern "C"
-{
-
-}
 
 enum UseingLanguage
 {

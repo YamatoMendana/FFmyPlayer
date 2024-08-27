@@ -2,32 +2,21 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11 console fpermissive
-
-# The following define makes your compiler emit warnings if you use
-# any Qt feature that has been marked deprecated (the exact warnings
-# depend on your compiler). Please consult the documentation of the
-# deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS \
-            __STDC_FORMAT_MACROS   \
-#            D__STDC_FORMAT_MACROS
+CONFIG += c++17
 
 TRANSLATIONS += chinese.ts \
                 english.ts
 
 CODECFORTR = UTF-8
-# You can also make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+TARGET = FFmyPlayer
+
 INCLUDEPATH += $$PWD/third/ffmpeg/include   \
                $$PWD/third/SDL2/include \
                $$PWD/include    \
                $$PWD/test
 
-
 DESTDIR += $$PWD/bin
-TARGET = FFmyPlayer
 
 win32
 {
@@ -54,44 +43,44 @@ LIBS += \
     -lswscale   \
     -lSDL2
 }
+
+# You can make your code fail to compile if it uses deprecated APIs.
+# In order to do so, uncomment the following line.
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
 SOURCES += \
+    src/Common.cpp \
     src/MainWindow.cpp \
-    src/avPacketQueue.cpp \
+    src/SDL_Widget.cpp \
+    src/avFrameList.cpp \
+    src/avPacketList.cpp \
+    src/decoder.cpp \
     src/main.cpp \
+    src/playerClock.cpp \
     src/playerCtlButtons.cpp \
     src/playerCtlWidget.cpp \
+    src/playerDisplay.cpp \
     src/playerManager.cpp \
-    src/playingInfo.cpp \
-    src/title_bar.cpp \
     src/playerWidget.cpp \
-    test/avio_file.cpp \
-    test/avio_reading.cpp \
-    test/demuxer_test.cpp \
-    test/demuxing_decoding.c \
-    test/encode_video.cpp \
-    test/filtering_Video.c \
-    test/libavutiltest.cpp \
-    test/remuxertest.cpp \
-    test/live_test.cpp
+    src/playingInfo.cpp \
+    src/title_bar.cpp
 
 HEADERS += \
+    include/Common.h \
     include/MainWindow.h \
+    include/SDL_Widget.h \
     include/StyleSheet.h \
-    include/avPacketQueue.h \
+    include/avFrameList.h \
+    include/avPacketList.h \
+    include/decoder.h \
+    include/playerClock.h \
     include/playerCtlButtons.h \
     include/playerCtlWidget.h \
+    include/playerDisplay.h \
     include/playerManager.h \
     include/playerWidget.h \
     include/playingInfo.h \
     include/title_bar.h \
-    test/avio_file.h \
-    test/avio_reading.h \
-    test/demuxer_test.h \
-    test/encode_video.h \
-    test/filtering_Video.h \
-    test/libavutiltest.h \
-    test/remuxertest.h \
-    test/live_test.h \
     third/SDL2/include/SDL.h \
     third/SDL2/include/SDL_assert.h \
     third/SDL2/include/SDL_atomic.h \
@@ -310,9 +299,3 @@ HEADERS += \
     third/ffmpeg/include/libswscale/version_major.h
 
 FORMS +=
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
-

@@ -4,6 +4,7 @@
 
 #include <QWidget>
 
+
 class PlayerWidget :public QWidget
 {
     //Q_OBJECT

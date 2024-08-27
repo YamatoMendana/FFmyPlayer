@@ -20,7 +20,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <OutputDirectory>bin\</OutputDirectory>
     <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
     <CharacterSet>NotSet</CharacterSet>
@@ -29,7 +29,7 @@
     <PrimaryOutput>FFmyPlayer</PrimaryOutput>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <OutputDirectory>bin\</OutputDirectory>
     <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
     <CharacterSet>NotSet</CharacterSet>
@@ -40,11 +40,11 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(QtMsBuild)\qt_defaults.props" Condition="Exists('$(QtMsBuild)\qt_defaults.props')" />
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <QtInstall>5.12.9_mvsc2017_64</QtInstall>
+    <QtInstall>6.4.8_mvsc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <QtInstall>5.12.9_mvsc2017_64</QtInstall>
+    <QtInstall>6.4.8_mvsc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') OR !Exists('$(QtMsBuild)\Qt.props')">
@@ -71,38 +71,46 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">FFmyPlayer</TargetName>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>.;third\ffmpeg\include;third\SDL2\include;include;test;release;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>release\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
       <DebugInformationFormat>None</DebugInformationFormat>
       <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>release\</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_CONSOLE;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;__STDC_FORMAT_MACROS;QT_NO_DEBUG;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;NDEBUG;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>
       </ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;$(QTDIR)\lib\Qt6EntryPoint.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.\third\ffmpeg\lib;.\third\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreImportLibrary>true</IgnoreImportLibrary>
       <LinkIncremental>false</LinkIncremental>
+      <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(OutDir)\FFmyPlayer.exe</OutputFile>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Link>
     <Midl>
@@ -111,7 +119,7 @@
       <WarningLevel>0</WarningLevel>
     </Midl>
     <ResourceCompile>
-      <PreprocessorDefinitions>_CONSOLE;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;__STDC_FORMAT_MACROS;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;NDEBUG;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <QtMoc>
       <CompilerFlavor>msvc</CompilerFlavor>
@@ -124,34 +132,35 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;third\ffmpeg\include;third\SDL2\include;include;test;debug;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>E:\Code\QtCode\FFmyPlayer;.;third\boost\include;third\ffmpeg\include;third\SDL2\include;include;test;debug;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>debug\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>debug\</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CONSOLE;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;swresample.lib;swscale.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\third\ffmpeg\lib;.\third\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;$(QTDIR)\lib\Qt6EntryPointd.lib;shell32.lib;libboost_system.lib;libboost_filesystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>third\boost\lib;.\third\ffmpeg\lib;.\third\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreImportLibrary>true</IgnoreImportLibrary>
       <OutputFile>$(OutDir)\FFmyPlayer.exe</OutputFile>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Link>
     <Midl>
@@ -160,7 +169,7 @@
       <WarningLevel>0</WarningLevel>
     </Midl>
     <ResourceCompile>
-      <PreprocessorDefinitions>_CONSOLE;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_DEPRECATED_WARNINGS;__STDC_FORMAT_MACROS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <QtMoc>
       <CompilerFlavor>msvc</CompilerFlavor>
@@ -173,38 +182,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Common.cpp" />
-    <ClCompile Include="src\playerClock.cpp" />
-    <ClCompile Include="src\decoder.cpp" />
-    <ClCompile Include="src\avFrameList.cpp" />
     <ClCompile Include="src\MainWindow.cpp" />
-    <ClCompile Include="src\avPacketList.cpp" />
-    <ClCompile Include="src\playerDisplay.cpp" />
-    <ClCompile Include="src\SDL_Widget.cpp" />
-    <ClCompile Include="test\avio_file.cpp" />
-    <ClCompile Include="test\avio_reading.cpp" />
-    <ClCompile Include="test\demuxer_test.cpp" />
-    <ClCompile Include="test\demuxing_decoding.c" />
-    <ClCompile Include="test\encode_video.cpp" />
-    <ClCompile Include="test\filtering_Video.c" />
-    <ClCompile Include="test\libavutiltest.cpp" />
-    <ClCompile Include="test\live_test.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\playerCtlButtons.cpp" />
     <ClCompile Include="src\playerCtlWidget.cpp" />
+    <ClCompile Include="src\playerDisplay.cpp" />
     <ClCompile Include="src\playerManager.cpp" />
     <ClCompile Include="src\playerWidget.cpp" />
     <ClCompile Include="src\playingInfo.cpp" />
-    <ClCompile Include="test\remuxertest.cpp" />
     <ClCompile Include="src\title_bar.cpp" />
+    <ClCompile Include="videoctl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\avFrameList.h" />
-    <ClInclude Include="include\playerClock.h" />
-    <ClInclude Include="include\decoder.h" />
     <ClInclude Include="include\Common.h" />
-    <ClInclude Include="include\MainWindow.h" />
-    <ClInclude Include="include\playerDisplay.h" />
-    <ClInclude Include="include\SDL_Widget.h" />
+    <ClInclude Include="include\configurationFile.h" />
+    <QtMoc Include="videoctl.h" />
+    <QtMoc Include="include\MainWindow.h" />
+    <ClInclude Include="include\dataStruct.h" />
     <ClInclude Include="third\SDL2\include\SDL.h" />
     <ClInclude Include="third\SDL2\include\SDL_assert.h" />
     <ClInclude Include="third\SDL2\include\SDL_atomic.h" />
@@ -290,7 +284,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\ambient_viewing_environment.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\attributes.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\audio_fifo.h" />
-    <ClInclude Include="include\avPacketList.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\avassert.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\avcodec.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\avconfig.h" />
@@ -300,8 +293,6 @@
     <ClInclude Include="third\ffmpeg\include\libavfilter\avfilter.h" />
     <ClInclude Include="third\ffmpeg\include\libavformat\avformat.h" />
     <ClInclude Include="third\ffmpeg\include\libavformat\avio.h" />
-    <ClInclude Include="test\avio_file.h" />
-    <ClInclude Include="test\avio_reading.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\avstring.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\avutil.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\base64.h" />
@@ -327,7 +318,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\csp.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\d3d11va.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\defs.h" />
-    <ClInclude Include="test\demuxer_test.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\des.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\detection_bbox.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\dict.h" />
@@ -337,7 +327,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\downmix_info.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\dv_profile.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\dxva2.h" />
-    <ClInclude Include="test\encode_video.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\encryption_info.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\error.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\eval.h" />
@@ -345,7 +334,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\fifo.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\file.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\film_grain_params.h" />
-    <ClInclude Include="test\filtering_Video.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\frame.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\hash.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\hdr_dynamic_metadata.h" />
@@ -368,8 +356,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\intreadwrite.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\jni.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\lfg.h" />
-    <ClInclude Include="test\libavutiltest.h" />
-    <ClInclude Include="test\live_test.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\log.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\lzo.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\macros.h" />
@@ -386,9 +372,10 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\pixdesc.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\pixelutils.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\pixfmt.h" />
-    <ClInclude Include="include\playerCtlButtons.h" />
+    <QtMoc Include="include\playerCtlButtons.h" />
     <ClInclude Include="include\playerCtlWidget.h" />
-    <ClInclude Include="include\playerManager.h" />
+    <QtMoc Include="include\playerDisplay.h" />
+    <QtMoc Include="include\playerManager.h" />
     <ClInclude Include="include\playerWidget.h" />
     <ClInclude Include="include\playingInfo.h" />
     <ClInclude Include="third\ffmpeg\include\libpostproc\postprocess.h" />
@@ -396,7 +383,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\random_seed.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\rational.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\rc4.h" />
-    <ClInclude Include="test\remuxertest.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\replaygain.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\ripemd.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\samplefmt.h" />
@@ -442,14 +428,14 @@
     <CustomBuild Include="debug\moc_predefs.h.cbt">
       <FileType>Document</FileType>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -Zi -MDd -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;$(IntDir)\moc_predefs.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -Zi -MDd -std:c++17 -utf-8 -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;$(IntDir)\moc_predefs.h</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generate moc_predefs.h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\moc_predefs.h;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="release\moc_predefs.h.cbt">
       <FileType>Document</FileType>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -O2 -MD -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;$(IntDir)\moc_predefs.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -O2 -MD -std:c++17 -utf-8 -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;$(IntDir)\moc_predefs.h</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generate moc_predefs.h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\moc_predefs.h;%(Outputs)</Outputs>
     </CustomBuild>

@@ -1,4 +1,4 @@
-#ifndef __PLAYERCTLBUTTON_H__
+О╩©#ifndef __PLAYERCTLBUTTON_H__
 #define __PLAYERCTLBUTTON_H__
 
 
@@ -8,13 +8,16 @@
 
 class PlayerCtlButtons :public QWidget
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
 	explicit PlayerCtlButtons(QWidget* parent = nullptr);
 	~PlayerCtlButtons();
 
 protected:
 
+
+signals:
+	void sigPlayFile(QString str);
 private slots:
 	void Play_clicked();
 	void Pause_clicked();
@@ -22,15 +25,15 @@ private slots:
 	void Open_clicked();
 
 private:
-	//╡╔╥е╟╢е╔
+	//Ф▓╜Ф■╬Ф▄┴И▓╝
 	QPushButton* pPlayButton = nullptr;
-	//мёж╧╟╢е╔
+	//Е│°Ф╜╒Ф▄┴И▓╝
 	QPushButton* pStopButton = nullptr;
-	//иор╩╪╞╟╢е╔
+	//Д╦┼Д╦─И⌡├Ф▄┴И▓╝
 	QPushButton* pPrevEpisodeButton = nullptr;
-	//обр╩╪╞╟╢е╔
+	//Д╦▀Д╦─И⌡├Ф▄┴И▓╝
 	QPushButton* pNextEpisodeButton = nullptr;
-	//╢Р©╙нд╪Ч╟╢е╔
+	//Ф┴⌠Е╪─Ф√┤Д╩╤Ф▄┴И▓╝
 	QPushButton* pOpenFileButton = nullptr;
 
 	QString strSupportVideoList;

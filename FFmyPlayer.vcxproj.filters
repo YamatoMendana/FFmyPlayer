@@ -37,34 +37,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\MainWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\avPacketList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\avio_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\avio_reading.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\demuxer_test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\demuxing_decoding.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\encode_video.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\filtering_Video.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\libavutiltest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\live_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
@@ -76,6 +52,9 @@
     <ClCompile Include="src\playerCtlWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\playerDisplay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\playerManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -85,33 +64,15 @@
     <ClCompile Include="src\playingInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test\remuxertest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\title_bar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\avFrameList.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\decoder.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SDL_Widget.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\playerClock.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\playerDisplay.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Common.cpp">
+    <ClCompile Include="videoctl.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\MainWindow.h">
+    <ClInclude Include="include\Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\SDL2\include\SDL.h">
@@ -369,9 +330,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\audio_fifo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\avPacketList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\avassert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -397,12 +355,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavformat\avio.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\avio_file.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\avio_reading.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\avstring.h">
@@ -480,9 +432,6 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test\demuxer_test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\des.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -510,9 +459,6 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\dxva2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test\encode_video.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\encryption_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -532,9 +478,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\film_grain_params.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\filtering_Video.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\frame.h">
@@ -603,12 +546,6 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\lfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test\libavutiltest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\live_test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -657,15 +594,15 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\pixfmt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\playerCtlButtons.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\playerCtlWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\playerManager.h">
+    <QtMoc Include="include\playerDisplay.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </QtMoc>
+    <QtMoc Include="include\playerManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <ClInclude Include="include\playerWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -685,9 +622,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\rc4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\remuxertest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\replaygain.h">
@@ -810,22 +744,10 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\xvmc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\avFrameList.h">
+    <ClInclude Include="include\configurationFile.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\decoder.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Common.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SDL_Widget.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\playerClock.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\playerDisplay.h">
+    <ClInclude Include="include\dataStruct.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -844,5 +766,16 @@
     <None Include="english.ts">
       <Filter>Translation Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="include\playerCtlButtons.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\MainWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="videoctl.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

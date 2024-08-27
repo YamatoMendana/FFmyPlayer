@@ -5,7 +5,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QtGlobal>
-#include <QDesktopWidget>
+#include <QWidget>
 
 #include "StyleSheet.h"
 
@@ -24,9 +24,6 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 	////设置悬停
 	//setAttribute(Qt::WA_Hover, true);
 
-	QDesktopWidget* desktop = QApplication::desktop();
-	m_availableWindowRect = QRect(desktop->availableGeometry());
-
     pTitleBar = new TitleBar(this);
     pTitleBar->resize(this->width(), 30);
     installEventFilter(pTitleBar);
@@ -38,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
     
     //创建播放窗口
     pPlayWidget = new PlayerWidget(this);
-
+	playWinId = pPlayWidget->winId();
 
 	//创建播放控制按钮窗口
 	pPlayCtlWidget = new PlayerCtlWidget(this);
@@ -50,7 +47,11 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
     pVlayout->setContentsMargins(5, 5, 5, 5);
     this->setLayout(pVlayout);
 
+	pPlayManager = new PlayerManager();
 
+	connect(pPlayCtlWidget->pCtlBts, &PlayerCtlButtons::sigPlayFile,this,[&](QString filename) {
+		pPlayManager->open_file(filename, playWinId);
+		});
 
 }
 

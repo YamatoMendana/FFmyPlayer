@@ -12,6 +12,8 @@
 #include "dataStruct.h"
 #include "Common.h"
 
+#define SECONDS_TO_MICROSECONDS(seconds) ((int64_t)(seconds) * 1000000)
+
 using namespace std;
 //表示处理消息的事件回调方法类型
 using streamClosehandler = std::function<void(VideoState* is)>;
@@ -30,17 +32,21 @@ public:
 	void stream_close(VideoState* is);
 
 	//暂停
-	void toggle_pause(VideoState* is);
+	bool toggle_pause();
+	//停止
+	void stop();
 	//静音切换
-	void toggle_mute();
+	bool toggle_mute();
 	//修改音量
-	void update_volume(VideoState* is,int sign, double step);
+	int update_volume(int sign, double step);
 	//跳指定时间帧
-	void stream_seek(VideoState* is,int64_t pos, int64_t rel, int by_bytes);
-	//跳到下一帧
-	void step_to_next_frame(VideoState* is);
-	//跳转章节
-	void seek_chapter(VideoState* is, int incr);
+	void stream_seek(int64_t pos, int64_t rel, int by_bytes);
+	//跳转指定时间
+	void seek(double seconds);
+	//向前跳转
+	void seek_forward();
+	//向后跳转
+	void seek_back();
 	//切换流类型
 	void stream_cycle_channel(VideoState* is, int codec_type);
 
@@ -48,7 +54,8 @@ private:
 	void do_exit(VideoState*& is);
 	//播放状态切换
 	void stream_toggle_pause(VideoState* is);
-
+	//跳到下一帧
+	void step_to_next_frame(VideoState* is);
 private:
 	//旋转
 	double display_rotation_get(const int32_t matrix[9]);
@@ -222,7 +229,7 @@ public:
 	bool Display_disable = false;//是否禁用显示功能
 
 	int infinite_buffer = -1;//控制输入缓冲区行为
-	bool m_bloop = 1;	//播放循环
+	bool m_bloop = true;	//播放循环
 	int framedrop = -1;//丢帧
 	int autorotate = 1;//旋转
 
@@ -231,6 +238,8 @@ public:
 
 	char* afilters = nullptr;
 	bool bInit = false;//初始化标志
+
+	int incr = 5;//跳转秒数
 
 };
 

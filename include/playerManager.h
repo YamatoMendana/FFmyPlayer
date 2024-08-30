@@ -22,6 +22,15 @@ public:
 	~PlayerManager();
 
 	int open_file(QString filename, WId widId);
+	void play_stop();
+	bool playStatus_toggle();
+	void seek_forward();
+	void seek_back();
+
+	inline std::shared_ptr<PlayerDisplay> getDisplayPtr() const {
+		return displayPtr;
+	}
+
 
 private:
 	shared_ptr<PlayerDisplay>displayPtr;

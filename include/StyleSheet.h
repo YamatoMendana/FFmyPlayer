@@ -113,4 +113,53 @@ static const QString PlayingInfoLabel_SS = ""
 "}";
 
 
+static const QString PlayList_TabWidget_SS = ""
+"QTabWidget#PlayListTabWidget::pane{"
+"background-color:rgb(59, 59, 59);"
+"border:none;"
+"}"
+"QTabBar{"
+"background-color:rgb(59, 59, 59);"
+"}"
+"QTabBar::tab{"
+"background-color:transparent;"
+"color:rgb(136, 136, 136);"
+"}"
+"QTabBar::tab:selected{"
+"background - color:transparent;"
+"color:rgb(233, 233, 233);"
+"}"
+"QTabBar::tab:!selected{"
+"background - color:transparent;"
+"color:rgb(136, 136, 136);"
+"}";
+
+//static const QString PlayList_TarBar_SS = ""
+//"QTabBar{"
+//"background-color:rgb(59, 59, 59);"
+//"}"
+//"QTabBar::tab{"
+//"background-color:transparent;"
+//"color:rgb(136, 136, 136);"
+//"}"
+//"QTabBar::tab:selected{"
+//"background - color:transparent;"
+//"color:rgb(233, 233, 233);"
+//"}"
+//"QTabBar::tab:!selected{"
+//"background - color:transparent;"
+//"color:rgb(136, 136, 136);"
+//"}";
+
+static const QString PlayList_ListWidget_SS = ""
+"QListWidget{"
+"background-color:transparent;"
+"}"
+"QListWidget::item:selected{"
+"color:rgb(233,233,233);"
+"}"
+"QListWidget::item:!selected{"
+"color:rgb(136,136,136);"
+"}";
+
 #endif // STYLESHEET_H

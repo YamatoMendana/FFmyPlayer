@@ -71,13 +71,9 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">FFmyPlayer</TargetName>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>$(LibraryPath)</LibraryPath>
-    <IncludePath>$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;third\ffmpeg\include;third\SDL2\include;include;test;release;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;third\ffmpeg\include;third\SDL2\include;third\boost\include;include;test;release;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>release\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -99,8 +95,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;$(QTDIR)\lib\Qt6EntryPoint.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\third\ffmpeg\lib;.\third\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;boost_system.lib;boost_filesystem.lib;$(QTDIR)\lib\Qt6EntryPoint.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\third\ffmpeg\lib;.\third\SDL2\lib\x64;.\third\boost\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -132,7 +128,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\Code\QtCode\FFmyPlayer;.;third\boost\include;third\ffmpeg\include;third\SDL2\include;include;test;debug;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;third\ffmpeg\include;third\SDL2\include;third\boost\include;include;test;debug;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -permissive- -Zc:__cplusplus -Zc:externConstexpr -utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>debug\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -152,8 +148,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;$(QTDIR)\lib\Qt6EntryPointd.lib;shell32.lib;libboost_system.lib;libboost_filesystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>third\boost\lib;.\third\ffmpeg\lib;.\third\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>.\third\ffmpeg\lib\avcodec.lib;.\third\ffmpeg\lib\avdevice.lib;.\third\ffmpeg\lib\avfilter.lib;.\third\ffmpeg\lib\avformat.lib;.\third\ffmpeg\lib\avutil.lib;.\third\ffmpeg\lib\swresample.lib;.\third\ffmpeg\lib\swscale.lib;.\third\SDL2\lib\x64\SDL2.lib;.\third\boost\lib\libboost_system.lib;.\third\boost\lib\libboost_filesystem.lib;$(QTDIR)\lib\Qt6EntryPointd.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\third\ffmpeg\lib;.\third\SDL2\lib\x64;.\third\boost\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -187,18 +183,16 @@
     <ClCompile Include="src\playerCtlButtons.cpp" />
     <ClCompile Include="src\playerCtlWidget.cpp" />
     <ClCompile Include="src\playerDisplay.cpp" />
+    <ClCompile Include="src\playerListWidget.cpp" />
     <ClCompile Include="src\playerManager.cpp" />
     <ClCompile Include="src\playerWidget.cpp" />
     <ClCompile Include="src\playingInfo.cpp" />
     <ClCompile Include="src\title_bar.cpp" />
-    <ClCompile Include="videoctl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Common.h" />
-    <ClInclude Include="include\configurationFile.h" />
-    <QtMoc Include="videoctl.h" />
     <QtMoc Include="include\MainWindow.h" />
-    <ClInclude Include="include\dataStruct.h" />
+    <QtMoc Include="include\playerListWidget.h" />
     <ClInclude Include="third\SDL2\include\SDL.h" />
     <ClInclude Include="third\SDL2\include\SDL_assert.h" />
     <ClInclude Include="third\SDL2\include\SDL_atomic.h" />
@@ -313,10 +307,12 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\codec_id.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\codec_par.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\common.h" />
+    <ClInclude Include="include\configurationFile.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\cpu.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\crc.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\csp.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\d3d11va.h" />
+    <ClInclude Include="include\dataStruct.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\defs.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\des.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\detection_bbox.h" />
@@ -352,6 +348,7 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\hwcontext_videotoolbox.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\hwcontext_vulkan.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\imgutils.h" />
+    <ClInclude Include="third\boost\include\boost\property_tree\ini_parser.hpp" />
     <ClInclude Include="third\ffmpeg\include\libavutil\intfloat.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\intreadwrite.h" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\jni.h" />
@@ -373,12 +370,13 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\pixelutils.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\pixfmt.h" />
     <QtMoc Include="include\playerCtlButtons.h" />
-    <ClInclude Include="include\playerCtlWidget.h" />
+    <QtMoc Include="include\playerCtlWidget.h" />
     <QtMoc Include="include\playerDisplay.h" />
     <QtMoc Include="include\playerManager.h" />
     <ClInclude Include="include\playerWidget.h" />
-    <ClInclude Include="include\playingInfo.h" />
+    <QtMoc Include="include\playingInfo.h" />
     <ClInclude Include="third\ffmpeg\include\libpostproc\postprocess.h" />
+    <ClInclude Include="third\boost\include\boost\property_tree\ptree.hpp" />
     <ClInclude Include="third\ffmpeg\include\libavcodec\qsv.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\random_seed.h" />
     <ClInclude Include="third\ffmpeg\include\libavutil\rational.h" />

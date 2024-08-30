@@ -10,6 +10,7 @@
 #include "playerWidget.h"
 #include "playerCtlWidget.h"
 #include "playerManager.h"
+#include "playerListWidget.h"
 
 class MainWindow:public QWidget
 {
@@ -17,6 +18,7 @@ class MainWindow:public QWidget
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -28,10 +30,12 @@ protected:
     
 
 private:
-    TitleBar* pTitleBar;
-    PlayerWidget* pPlayWidget;
-    PlayerCtlWidget* pPlayCtlWidget;
-    PlayerManager* pPlayManager;
+    TitleBar* pTitleBar = nullptr;
+    PlayerWidget* pPlayWidget = nullptr;
+    PlayerCtlWidget* pPlayCtlWidget = nullptr;
+    playerListWidget* pPlayListWidget = nullptr;
+    PlayerManager* pPlayManager = nullptr;
+    
     
     WId playWinId;
 

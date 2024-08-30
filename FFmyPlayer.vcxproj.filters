@@ -67,7 +67,7 @@
     <ClCompile Include="src\title_bar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="videoctl.cpp">
+    <ClCompile Include="src\playerListWidget.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,6 +75,9 @@
     <ClInclude Include="include\Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <QtMoc Include="include\MainWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <ClInclude Include="third\SDL2\include\SDL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -417,6 +420,9 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\configurationFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\cpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -427,6 +433,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavcodec\d3d11va.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dataStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavcodec\defs.h">
@@ -534,6 +543,9 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\imgutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="third\boost\include\boost\property_tree\ini_parser.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavutil\intfloat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -594,9 +606,9 @@
     <ClInclude Include="third\ffmpeg\include\libavutil\pixfmt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\playerCtlWidget.h">
+    <QtMoc Include="include\playerCtlButtons.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </QtMoc>
     <QtMoc Include="include\playerDisplay.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -606,10 +618,10 @@
     <ClInclude Include="include\playerWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\playingInfo.h">
+    <ClInclude Include="third\ffmpeg\include\libpostproc\postprocess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="third\ffmpeg\include\libpostproc\postprocess.h">
+    <ClInclude Include="third\boost\include\boost\property_tree\ptree.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third\ffmpeg\include\libavcodec\qsv.h">
@@ -744,12 +756,6 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\xvmc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\configurationFile.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\dataStruct.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -768,13 +774,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="include\playerCtlButtons.h">
+    <QtMoc Include="include\playerCtlWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="include\MainWindow.h">
+    <QtMoc Include="include\playingInfo.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="videoctl.h">
+    <QtMoc Include="include\playerListWidget.h">
       <Filter>Generated Files</Filter>
     </QtMoc>
   </ItemGroup>

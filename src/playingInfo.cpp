@@ -1,6 +1,8 @@
 ﻿#include "playingInfo.h"
 
 #include <QHBoxLayout>
+#include <QTime>
+
 #include "StyleSheet.h"
 
 PlayingInfo::PlayingInfo(QWidget* parent /*= nullptr*/)
@@ -50,4 +52,27 @@ PlayingInfo::PlayingInfo(QWidget* parent /*= nullptr*/)
 PlayingInfo::~PlayingInfo()
 {
 
+}
+
+void PlayingInfo::setCurrentSeconds(double seconds)
+{
+	QString str = convertSecondsToHMS(seconds);
+	pPlayingTimeLabel->setText(str);
+}
+
+void PlayingInfo::setTotalSeconds(double seconds)
+{
+	QString str = convertSecondsToHMS(seconds);
+	pPlayTotalTimeLabel->setText(str);
+}
+
+QString PlayingInfo::convertSecondsToHMS(double seconds)
+{
+	// 使用 QTime 类将秒数转换为时间格式
+	QTime time = QTime::fromMSecsSinceStartOfDay((int)seconds * 1000);
+
+	// 将时间格式化为 "00:00:00" 形式的 QString
+	strCurrentSeconds = time.toString("hh:mm:ss");
+
+	return strCurrentSeconds;
 }

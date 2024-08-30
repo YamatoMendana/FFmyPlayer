@@ -1,5 +1,6 @@
 ﻿#include "MainWindow.h"
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QApplication>
@@ -32,27 +33,74 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
     setWindowTitle("FFmyPlayer");
     //设置窗口图标
 	//something
-    
+
+	//主窗口 = 播放窗口+播放列表
+	QWidget* pWidget1 = new QWidget();//左侧
+	QWidget* pWidget2 = new QWidget();//右侧
+
     //创建播放窗口
-    pPlayWidget = new PlayerWidget(this);
+    pPlayWidget = new PlayerWidget(pWidget1);
 	playWinId = pPlayWidget->winId();
 
 	//创建播放控制按钮窗口
-	pPlayCtlWidget = new PlayerCtlWidget(this);
+	pPlayCtlWidget = new PlayerCtlWidget(pWidget1);
+
+	//创建播放列表
+	pPlayListWidget = new playerListWidget();
+
+	QVBoxLayout* pVlayout1 = new QVBoxLayout();
+	pVlayout1->addWidget(pPlayWidget);
+	pVlayout1->addWidget(pPlayCtlWidget);
+	pVlayout1->setContentsMargins(0, 0, 0, 0);
+	pVlayout1->setSpacing(1);
+	pWidget1->setLayout(pVlayout1);
+
+	QHBoxLayout* pHlayout1 = new QHBoxLayout();
+	pHlayout1->addWidget(pWidget1);
+	pHlayout1->addWidget(pPlayListWidget);
+	pHlayout1->setContentsMargins(5,5,5,5);
+	pWidget2->setLayout(pHlayout1);
 
 	QVBoxLayout* pVlayout = new QVBoxLayout();
-    pVlayout->addWidget(pTitleBar);
-    pVlayout->addWidget(pPlayWidget);
-	pVlayout->addWidget(pPlayCtlWidget);
-    pVlayout->setContentsMargins(5, 5, 5, 5);
+	pVlayout->addWidget(pTitleBar);
+	pVlayout->addWidget(pWidget2);
+	pVlayout->setContentsMargins(0, 0, 0, 0);
     this->setLayout(pVlayout);
+
+	
+
 
 	pPlayManager = new PlayerManager();
 
-	connect(pPlayCtlWidget->pCtlBts, &PlayerCtlButtons::sigPlayFile,this,[&](QString filename) {
+	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigPlayFile, this, [&](QString filename) {
 		pPlayManager->open_file(filename, playWinId);
 		});
+	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigPlayStatusChange, this, [&](){
+		bool playstatus = pPlayManager->playStatus_toggle();
+		pPlayCtlWidget->setPlayIcon(playstatus);
+		});
+	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigPlayStop, this, [&](){
+		pPlayManager->play_stop();
+		pPlayCtlWidget->setPlayIcon(true);
+		pPlayWidget->update();
+		});
+	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigSeekForword, pPlayManager, &PlayerManager::seek_forward);
+	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigSeekBack, pPlayManager, &PlayerManager::seek_back);
 
+	connect(pPlayManager->getDisplayPtr().get(), &PlayerDisplay::sigVideoPlaySeconds, pPlayCtlWidget, &PlayerCtlWidget::setPlayingSeconds);
+	connect(pPlayManager->getDisplayPtr().get(), &PlayerDisplay::sigVideoTotalSeconds, pPlayCtlWidget, &PlayerCtlWidget::setPlayingTotalSeconds);
+	connect(pPlayManager->getDisplayPtr().get(), &PlayerDisplay::sigFileOpen, this, [&](QString filename) {
+		//加入播放列表
+		QWidget* tabwidget = pPlayListWidget->widget(0);
+		qDebug() << tabwidget->children();
+		PlayList* list = tabwidget->findChild<PlayList*>("DefaultAlbumList");
+		list->addItem(filename);
+		//改变播放按钮
+		pPlayCtlWidget->setPlayIcon(false);
+		});
+	connect(pPlayListWidget, &playerListWidget::sigOpenfile, this, [&](QString filename) {
+		pPlayManager->open_file(filename, playWinId);
+		});
 }
 
 MainWindow::~MainWindow()

@@ -12,8 +12,9 @@ CODECFORTR = UTF-8
 TARGET = FFmyPlayer
 
 INCLUDEPATH += $$PWD/third/ffmpeg/include   \
-               $$PWD/third/SDL2/include \
-               $$PWD/include    \
+               $$PWD/third/SDL2/include     \
+               $$PWD/third/boost/include    \
+               $$PWD/include                \
                $$PWD/test
 
 DESTDIR += $$PWD/bin
@@ -29,7 +30,10 @@ LIBS += -L$$PWD/third/ffmpeg/lib \
         -lswresample \
         -lswscale   \
         -L$$PWD/third/SDL2/lib/x64  \
-        -lSDL2
+        -lSDL2  \
+        -L$$PWD/third/boost/lib/    \
+        -lboost_system  \
+        -lboost_filesystem
 }
 unix {
 LIBS += \
@@ -41,7 +45,9 @@ LIBS += \
     -lavutil \
     -lswresample \
     -lswscale   \
-    -lSDL2
+    -lSDL2  \
+    -lboost_system  \
+    -lboost_filesystem
 }
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -51,12 +57,7 @@ LIBS += \
 SOURCES += \
     src/Common.cpp \
     src/MainWindow.cpp \
-    src/SDL_Widget.cpp \
-    src/avFrameList.cpp \
-    src/avPacketList.cpp \
-    src/decoder.cpp \
     src/main.cpp \
-    src/playerClock.cpp \
     src/playerCtlButtons.cpp \
     src/playerCtlWidget.cpp \
     src/playerDisplay.cpp \
@@ -65,15 +66,13 @@ SOURCES += \
     src/playingInfo.cpp \
     src/title_bar.cpp
 
+
 HEADERS += \
     include/Common.h \
     include/MainWindow.h \
-    include/SDL_Widget.h \
     include/StyleSheet.h \
-    include/avFrameList.h \
-    include/avPacketList.h \
-    include/decoder.h \
-    include/playerClock.h \
+    include/configurationFile.h \
+    include/dataStruct.h \
     include/playerCtlButtons.h \
     include/playerCtlWidget.h \
     include/playerDisplay.h \
@@ -159,6 +158,8 @@ HEADERS += \
     third/SDL2/include/SDL_vulkan.h \
     third/SDL2/include/begin_code.h \
     third/SDL2/include/close_code.h \
+    third/boost/include/boost/property_tree/ini_parser.hpp \
+    third/boost/include/boost/property_tree/ptree.hpp \
     third/ffmpeg/include/libavcodec/ac3_parser.h \
     third/ffmpeg/include/libavcodec/adts_parser.h \
     third/ffmpeg/include/libavcodec/avcodec.h \
@@ -297,5 +298,9 @@ HEADERS += \
     third/ffmpeg/include/libswscale/swscale.h \
     third/ffmpeg/include/libswscale/version.h \
     third/ffmpeg/include/libswscale/version_major.h
+
+
+
+
 
 FORMS +=

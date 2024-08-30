@@ -13,9 +13,9 @@ PlayerDisplay::PlayerDisplay(QObject* parent):QObject(parent)
 
 	init();
 
-	//um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_AUDIO,std::bind(&PlayerDisplay::audioStreamClose,this,std::placeholders::_1) });
-	//um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_VIDEO,std::bind(&PlayerDisplay::videoStreamClose,this,std::placeholders::_1) });
-	//um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_SUBTITLE,std::bind(&PlayerDisplay::subtitleStreamClose,this,std::placeholders::_1) });
+	um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_AUDIO,std::bind(&PlayerDisplay::audioStreamClose,this,std::placeholders::_1) });
+	um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_VIDEO,std::bind(&PlayerDisplay::videoStreamClose,this,std::placeholders::_1) });
+	um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_SUBTITLE,std::bind(&PlayerDisplay::subtitleStreamClose,this,std::placeholders::_1) });
 
 }
 
@@ -73,7 +73,6 @@ bool PlayerDisplay::startPlay(QString filename, WId widId)
 	if (is == nullptr)
 	{
 		do_exit(pCurStream);
-		return false;
 	}
 
 	m_tPlayLoopThread = std::thread(&PlayerDisplay::LoopThread, this, is);
@@ -203,34 +202,89 @@ void PlayerDisplay::stream_close(VideoState* is)
 	av_free(is);
 }
 
-void PlayerDisplay::toggle_pause(VideoState* is)
+bool PlayerDisplay::toggle_pause()
 {
-	stream_toggle_pause(is);
-	is->step = 0;
+	if (pCurStream == nullptr)
+		return true;
+	stream_toggle_pause(pCurStream);
+	pCurStream->step = 0;
+
+	return pCurStream->paused;
 }
 
-void PlayerDisplay::toggle_mute()
+void PlayerDisplay::stop()
+{
+	m_bloop = false;
+}
+
+bool PlayerDisplay::toggle_mute()
 {
 	bMuted = !bMuted;
+	return bMuted;
 }
 
-void PlayerDisplay::update_volume(VideoState*is,int sign, double step)
+int PlayerDisplay::update_volume(int sign, double step)
 {
-	double volume_level = is->audio_volume ? (20 * log(is->audio_volume / (double)SDL_MIX_MAXVOLUME) / log(10)) : -1000.0;
+	double volume_level = pCurStream->audio_volume ? (20 * log(pCurStream->audio_volume / (double)SDL_MIX_MAXVOLUME) / log(10)) : -1000.0;
 	int new_volume = lrint(SDL_MIX_MAXVOLUME * pow(10.0, (volume_level + sign * step) / 20.0));
-	is->audio_volume = av_clip(is->audio_volume == new_volume ? (is->audio_volume + sign) : new_volume, 0, SDL_MIX_MAXVOLUME);
-	nCurrent_volume = is->audio_volume;
+	pCurStream->audio_volume = av_clip(pCurStream->audio_volume == new_volume ? (pCurStream->audio_volume + sign) : new_volume, 0, SDL_MIX_MAXVOLUME);
+	nCurrent_volume = pCurStream->audio_volume;
+	return nCurrent_volume;
 }
 
-void PlayerDisplay::stream_seek(VideoState* is,int64_t pos, int64_t rel, int by_bytes)
+void PlayerDisplay::stream_seek(int64_t pos, int64_t rel, int by_bytes)
 {
-	if (!is->seek_req) {
-		is->seek_pos = pos;
-		is->seek_rel = rel;
-		is->seek_flags &= ~AVSEEK_FLAG_BYTE;
-		is->seek_req = 1;
-		SDL_CondSignal(is->continue_read_thread);
+	if (!pCurStream->seek_req) {
+		pCurStream->seek_pos = pos;
+		pCurStream->seek_rel = rel;
+		pCurStream->seek_flags &= ~AVSEEK_FLAG_BYTE;
+		pCurStream->seek_req = 1;
+		SDL_CondSignal(pCurStream->continue_read_thread);
 	}
+}
+
+void PlayerDisplay::seek(double seconds)
+{
+	if (pCurStream == nullptr)
+		return;
+
+	//转化为微秒
+	double pos = seconds;
+	if (isnan(pos))
+		pos = (double)pCurStream->seek_pos / AV_TIME_BASE;
+	if (pCurStream->ic->start_time != AV_NOPTS_VALUE && pos < pCurStream->ic->start_time / (double)AV_TIME_BASE)
+		pos = pCurStream->ic->start_time / (double)AV_TIME_BASE;
+	stream_seek((int64_t)(pos * AV_TIME_BASE), 0, 0);
+}
+
+void PlayerDisplay::seek_forward()
+{
+	if (pCurStream == nullptr)
+		return;
+
+	//转化为微秒
+	double pos = get_master_clock(pCurStream);
+	if (isnan(pos))
+		pos = (double)pCurStream->seek_pos / AV_TIME_BASE;
+	pos += incr;
+	if (pCurStream->ic->start_time != AV_NOPTS_VALUE && pos < pCurStream->ic->start_time / (double)AV_TIME_BASE)
+		pos = pCurStream->ic->start_time / (double)AV_TIME_BASE;
+	stream_seek((int64_t)(pos * AV_TIME_BASE), (int64_t)(incr * AV_TIME_BASE), 0);
+}
+
+void PlayerDisplay::seek_back()
+{
+	if (pCurStream == nullptr)
+		return;
+
+	//转化为微秒
+	double pos = get_master_clock(pCurStream);
+	if (isnan(pos))
+		pos = (double)pCurStream->seek_pos / AV_TIME_BASE;
+	pos -= incr;
+	if (pCurStream->ic->start_time != AV_NOPTS_VALUE && pos < pCurStream->ic->start_time / (double)AV_TIME_BASE)
+		pos = pCurStream->ic->start_time / (double)AV_TIME_BASE;
+	stream_seek((int64_t)(pos * AV_TIME_BASE), (int64_t)(-incr * AV_TIME_BASE), 0);
 }
 
 void PlayerDisplay::stream_toggle_pause(VideoState* is)
@@ -254,33 +308,6 @@ void PlayerDisplay::step_to_next_frame(VideoState* is)
 	if (is->paused)
 		stream_toggle_pause(is);
 	is->step = 1;
-}
-
-void PlayerDisplay::seek_chapter(VideoState* is,int incr)
-{
-	int64_t pos = get_master_clock(is) * AV_TIME_BASE;
-	int i;
-	AVFormatContext* ic = is->ic;
-
-	if (!ic->nb_chapters)
-		return;
-
-	for (i = 0; i < ic->nb_chapters; i++) {
-		AVChapter* ch = ic->chapters[i];
-		if (av_compare_ts(pos, { 1, AV_TIME_BASE }, ch->start, ch->time_base) < 0) {
-			i--;
-			break;
-		}
-	}
-
-	i += incr;
-	i = FFMAX(i, 0);
-	if (i >= ic->nb_chapters)
-		return;
-
-	av_log(NULL, AV_LOG_VERBOSE, "Seeking to chapter %d.\n", i);
-	stream_seek(is,av_rescale_q(ic->chapters[i]->start, ic->chapters[i]->time_base,
-		{ 1, AV_TIME_BASE }), 0, 0);
 }
 
 void PlayerDisplay::stream_cycle_channel(VideoState* is,int codec_type)
@@ -637,7 +664,7 @@ void PlayerDisplay::stream_component_close(VideoState* is,int stream_index)
 void PlayerDisplay::audioStreamClose(VideoState* is)
 {
 	decoder_abort(&is->auddec, &is->sampq);
-	SDL_CloseAudio();
+	SDL_CloseAudioDevice(audio_dev);
 	decoder_destroy(&is->auddec);
 	swr_free(&is->swr_ctx);
 	av_freep(&is->audio_buf1);
@@ -1664,6 +1691,7 @@ void PlayerDisplay::do_exit(VideoState*& is)
 	{
 		stream_close(is);
 		is = nullptr;
+		pCurStream = nullptr;
 	}
 	if (renderer)
 	{
@@ -1673,7 +1701,7 @@ void PlayerDisplay::do_exit(VideoState*& is)
 
 	if (window)
 	{
-		//SDL_DestroyWindow(window);
+		SDL_DestroyWindow(window);
 		window = nullptr;
 	}
 
@@ -2145,8 +2173,6 @@ int PlayerDisplay::audio_open(AVChannelLayout* wanted_channel_layout, int wanted
 		av_log(NULL, AV_LOG_ERROR, "av_samples_get_buffer_size failed\n");
 		return -1;
 	}
-
-	SDL_PauseAudioDevice(audio_dev, 0);
 	return spec.size;
 }
 
@@ -2690,11 +2716,11 @@ void PlayerDisplay::read_thread(VideoState* is)
 				(!is->audio_st || (is->auddec.finished == is->audioq.serial && frame_queue_nb_remaining(&is->sampq) == 0)) &&
 				(!is->video_st || (is->viddec.finished == is->videoq.serial && frame_queue_nb_remaining(&is->pictq) == 0))) 
 			{
-				//if (loop != 1 && (!loop || --loop)) {
-				//	stream_seek(is,start_time != AV_NOPTS_VALUE ? start_time : 0, 0, 0);
-				//}
+				if (m_bloop == true) {
+					stream_seek(start_time != AV_NOPTS_VALUE ? start_time : 0, 0, 0);
+					continue;
+				}
 				emit sigStop();
-				continue;
 			}
 			ret = av_read_frame(ic, pkt);
 			if (ret < 0) {

@@ -4,21 +4,27 @@
 #include <QWidget>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 
 class PlayingInfo :public QWidget
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
 	explicit PlayingInfo(QWidget* parent = nullptr);
 	~PlayingInfo();
 
+	void setCurrentSeconds(double seconds);
+	void setTotalSeconds(double seconds);
+
+private:
+	QString convertSecondsToHMS(double seconds);
 
 private:
 	QLineEdit* pPlayingTimeLabel;
 	QLineEdit* pPlayTotalTimeLabel;
 	QLabel* pSplitterLabel;
 	
-	
+	QString strCurrentSeconds;
 };
 
 

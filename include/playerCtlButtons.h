@@ -4,6 +4,7 @@
 
 #include <QPushButton>
 #include <QWidget>
+
 #pragma execution_character_set("utf-8")
 
 class PlayerCtlButtons :public QWidget
@@ -13,16 +14,24 @@ public:
 	explicit PlayerCtlButtons(QWidget* parent = nullptr);
 	~PlayerCtlButtons();
 
+	void setPlayIcon(bool status);
+
 protected:
+	bool eventFilter(QObject* obj, QEvent* event);
 
 
 signals:
 	void sigPlayFile(QString str);
+	void sigPlayStop();
+	void sigPlayStatusChange();
+	void sigSeekForword();
+	void sigSeekBack();
 private slots:
 	void Play_clicked();
-	void Pause_clicked();
 	void Stop_clicked();
 	void Open_clicked();
+	void Seek_Forword_clicked();
+	void Seek_Back_clicked();
 
 private:
 	//播放按钮

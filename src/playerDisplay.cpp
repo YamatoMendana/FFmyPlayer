@@ -17,6 +17,7 @@ PlayerDisplay::PlayerDisplay(QObject* parent):QObject(parent)
 	um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_VIDEO,std::bind(&PlayerDisplay::videoStreamClose,this,std::placeholders::_1) });
 	um_stCloseHandlerMap.insert({ AVMEDIA_TYPE_SUBTITLE,std::bind(&PlayerDisplay::subtitleStreamClose,this,std::placeholders::_1) });
 
+	connect(this, &PlayerDisplay::sigStop, this, &PlayerDisplay::stop);
 }
 
 
@@ -59,7 +60,7 @@ int PlayerDisplay::init()
 
 bool PlayerDisplay::startPlay(QString filename, WId widId)
 {
-	m_bloop = false;
+	m_bplay = false;
 	if (m_tPlayLoopThread.joinable())
 	{
 		m_tPlayLoopThread.join();
@@ -214,7 +215,7 @@ bool PlayerDisplay::toggle_pause()
 
 void PlayerDisplay::stop()
 {
-	m_bloop = false;
+	m_bplay = false;
 }
 
 bool PlayerDisplay::toggle_mute()
@@ -1345,7 +1346,7 @@ void PlayerDisplay::refresh_loop_wait_event(VideoState* is, SDL_Event* event)
 {
 	double remaining_time = 0.0;
 	SDL_PumpEvents();
-	while (!SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) && m_bloop)
+	while (!SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) && m_bplay)
 	{
 		if (remaining_time > 0.0)
 			av_usleep((int64_t)(remaining_time * 1000000.0));
@@ -2721,6 +2722,7 @@ void PlayerDisplay::read_thread(VideoState* is)
 					continue;
 				}
 				emit sigStop();
+				continue;
 			}
 			ret = av_read_frame(ic, pkt);
 			if (ret < 0) {
@@ -2792,9 +2794,9 @@ void PlayerDisplay::LoopThread(VideoState* cur_stream)
 	SDL_Event event;
 	double incr, pos, frac;
 
-	m_bloop = true;
+	m_bplay = true;
 
-	while (m_bloop)
+	while (m_bplay)
 	{
 		double x;
 		refresh_loop_wait_event(cur_stream, &event);

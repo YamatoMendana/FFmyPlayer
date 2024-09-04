@@ -35,35 +35,42 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 	//something
 
 	//主窗口 = 播放窗口+播放列表
-	QWidget* pWidget1 = new QWidget();//左侧
-	QWidget* pWidget2 = new QWidget();//右侧
+	QWidget* pLeftWidget = new QWidget();//左侧
+	QWidget* pBottomWidget = new QWidget();//底部
 
     //创建播放窗口
-    pPlayWidget = new PlayerWidget(pWidget1);
+    pPlayWidget = new PlayerWidget(pLeftWidget);
 	playWinId = pPlayWidget->winId();
 
 	//创建播放控制按钮窗口
-	pPlayCtlWidget = new PlayerCtlWidget(pWidget1);
-
+	pPlayCtlWidget = new PlayerCtlWidget(pLeftWidget);
+	//创建播放进度条窗口
+	pPlayCtlSlider = new PlayerCtlSlider(pLeftWidget);
 	//创建播放列表
 	pPlayListWidget = new playerListWidget();
 
-	QVBoxLayout* pVlayout1 = new QVBoxLayout();
-	pVlayout1->addWidget(pPlayWidget);
-	pVlayout1->addWidget(pPlayCtlWidget);
-	pVlayout1->setContentsMargins(0, 0, 0, 0);
-	pVlayout1->setSpacing(1);
-	pWidget1->setLayout(pVlayout1);
+	QVBoxLayout* pVCtlLayout = new QVBoxLayout();
+	pVCtlLayout->addWidget(pPlayCtlSlider);
+	pVCtlLayout->addWidget(pPlayCtlWidget);
+	pVCtlLayout->setContentsMargins(5, 5, 5, 5);
+	pVCtlLayout->setSpacing(5);
 
-	QHBoxLayout* pHlayout1 = new QHBoxLayout();
-	pHlayout1->addWidget(pWidget1);
-	pHlayout1->addWidget(pPlayListWidget);
-	pHlayout1->setContentsMargins(5,5,5,5);
-	pWidget2->setLayout(pHlayout1);
+	QVBoxLayout* pVLeftLayout = new QVBoxLayout();
+	pVLeftLayout->addWidget(pPlayWidget);
+	pVLeftLayout->addLayout(pVCtlLayout);
+	pVLeftLayout->setContentsMargins(0, 0, 0, 0);
+	pVLeftLayout->setSpacing(1);
+	pLeftWidget->setLayout(pVLeftLayout);
+
+	QHBoxLayout* pHBottomLayout = new QHBoxLayout();
+	pHBottomLayout->addWidget(pLeftWidget);
+	pHBottomLayout->addWidget(pPlayListWidget);
+	pHBottomLayout->setContentsMargins(5,5,5,5);
+	pBottomWidget->setLayout(pHBottomLayout);
 
 	QVBoxLayout* pVlayout = new QVBoxLayout();
 	pVlayout->addWidget(pTitleBar);
-	pVlayout->addWidget(pWidget2);
+	pVlayout->addWidget(pBottomWidget);
 	pVlayout->setContentsMargins(0, 0, 0, 0);
     this->setLayout(pVlayout);
 
@@ -73,7 +80,8 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 	pPlayManager = new PlayerManager();
 
 	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigPlayFile, this, [&](QString filename) {
-		pPlayManager->open_file(filename, playWinId);
+		QStringList* list = &(pPlayListWidget->strplaylist);
+		int ret = pPlayManager->play(list,filename, playWinId);
 		});
 	connect(pPlayCtlWidget->getPlayerCtlButtonsPtr(), &PlayerCtlButtons::sigPlayStatusChange, this, [&](){
 		bool playstatus = pPlayManager->playStatus_toggle();
@@ -98,8 +106,12 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 		//改变播放按钮
 		pPlayCtlWidget->setPlayIcon(false);
 		});
+	connect(pPlayManager, &PlayerManager::sigPlayNext, this, [&](int index) {
+		pPlayListWidget->setCurrentRow(index);
+		});
 	connect(pPlayListWidget, &playerListWidget::sigOpenfile, this, [&](QString filename) {
-		pPlayManager->open_file(filename, playWinId);
+		QStringList* list = &(pPlayListWidget->strplaylist);
+		int ret = pPlayManager->play(list, filename, playWinId);
 		});
 }
 

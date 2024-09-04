@@ -70,6 +70,9 @@
     <ClCompile Include="src\playerListWidget.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\playerCtlSlider.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Common.h">
@@ -781,6 +784,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="include\playerListWidget.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerCtlSlider.h">
       <Filter>Generated Files</Filter>
     </QtMoc>
   </ItemGroup>

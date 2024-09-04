@@ -8,6 +8,8 @@
 #include <QFileInfo>
 #include <set>
 
+#include "Common.h"
+
 
 
 class PlayListBar :public QTabBar
@@ -31,50 +33,11 @@ class PlayList : public QListWidget
 public:
 	PlayList(QWidget* parent = nullptr) : QListWidget(parent) {}
 
-	void addItem(QListWidgetItem* item)
-	{
-		QListWidgetItem* pItem = item;
-		QString path = pItem->text();
-		if (!addUniqueItem(path))
-		{
-			QFileInfo fileInfo(path);
-			QString fileName = fileInfo.fileName();
-			pItem->setText(fileName);
-			pItem->setData(Qt::UserRole, QVariant(path));
-			QListWidget::addItem(pItem);
-			itemSet.insert(path);
-		}
-		else
-			return;
-	}
-	void addItem(const QString& label)
-	{
-		
-		QString path = label;
-		if (!addUniqueItem(path))
-		{
-			QFileInfo fileInfo(path);
-			QString fileName = fileInfo.fileName();
-			QListWidgetItem* pItem = new QListWidgetItem(fileName);;
-			pItem->setData(Qt::UserRole, QVariant(path));
-			QListWidget::addItem(pItem);
-			itemSet.insert(path);
-		}
-		else
-			return;
-	}
+	void addItem(QListWidgetItem* item);
 
-	void removeItemWidget(QListWidgetItem* item){
-		QListWidgetItem* pItem = item;
-		QString path = pItem->text();
-		if (addUniqueItem(path))
-		{
-			QListWidget::removeItemWidget(item);
-			itemSet.erase(path);
-		}
-		else
-			return;		
-	}
+	void addItem(const QString& label);
+
+	void removeItemWidget(QListWidgetItem* item);
 
 private:
 	bool addUniqueItem(const QString& itemText) {
@@ -97,12 +60,19 @@ class playerListWidget :public QTabWidget
 	Q_OBJECT
 public:
 	explicit playerListWidget(QWidget* parent = nullptr);
+	~playerListWidget();
 
+	void init();
+	void setCurrentRow(int index);
+
+public:
+	QStringList strplaylist;
 signals:
 	void sigOpenfile(QString path);
+
 private:
 	PlayListBar* pTabBar = nullptr;
-	QListWidget* pListPtr = nullptr;
+	PlayList* pListPtr = nullptr;
 };
 
 

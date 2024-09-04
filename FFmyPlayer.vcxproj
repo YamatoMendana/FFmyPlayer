@@ -181,6 +181,7 @@
     <ClCompile Include="src\MainWindow.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\playerCtlButtons.cpp" />
+    <ClCompile Include="src\playerCtlSlider.cpp" />
     <ClCompile Include="src\playerCtlWidget.cpp" />
     <ClCompile Include="src\playerDisplay.cpp" />
     <ClCompile Include="src\playerListWidget.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="include\Common.h" />
     <QtMoc Include="include\MainWindow.h" />
     <QtMoc Include="include\playerListWidget.h" />
+    <QtMoc Include="include\playerCtlSlider.h" />
     <ClInclude Include="third\SDL2\include\SDL.h" />
     <ClInclude Include="third\SDL2\include\SDL_assert.h" />
     <ClInclude Include="third\SDL2\include\SDL_atomic.h" />

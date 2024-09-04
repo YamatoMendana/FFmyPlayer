@@ -26,6 +26,36 @@ int GlobalSingleton::init()
 }
 
 
+void GlobalSingleton::savePlayList(QStringList& playList)
+{
+	QString strSavePath = QDir::tempPath() + QDir::separator() + PLAYER_LIST_INI;
+	QSettings settings(strSavePath, QSettings::IniFormat);
+
+	settings.beginWriteArray("playList");
+	for (int i = 0 ; i < playList.size(); i++)
+	{
+		settings.setArrayIndex(i);
+		settings.setValue("movie", playList.at(i));
+	}
+	settings.endArray();
+
+	qDebug() << "play list save in :" << strSavePath;
+}
+
+void GlobalSingleton::getPlaylist(QStringList& playList)
+{
+	QString strSavePath = QDir::tempPath() + QDir::separator() + PLAYER_LIST_INI;
+	QSettings settings(strSavePath, QSettings::IniFormat);
+
+	int size = settings.beginReadArray("playlist");
+	for (int i = 0; i < size; ++i)
+	{
+		settings.setArrayIndex(i);
+		playList.append(settings.value("movie").toString());
+	}
+	settings.endArray();
+}
+
 // 静态成员变量定义
 std::unique_ptr<GlobalSingleton> GlobalSingleton::instance = nullptr;
 std::mutex GlobalSingleton::mutex;

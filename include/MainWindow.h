@@ -11,6 +11,7 @@
 #include "playerCtlWidget.h"
 #include "playerManager.h"
 #include "playerListWidget.h"
+#include "playerCtlSlider.h"
 
 class MainWindow:public QWidget
 {
@@ -33,8 +34,10 @@ private:
     TitleBar* pTitleBar = nullptr;
     PlayerWidget* pPlayWidget = nullptr;
     PlayerCtlWidget* pPlayCtlWidget = nullptr;
+    PlayerCtlSlider* pPlayCtlSlider = nullptr;
     playerListWidget* pPlayListWidget = nullptr;
     PlayerManager* pPlayManager = nullptr;
+    
     
     
     WId playWinId;

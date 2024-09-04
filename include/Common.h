@@ -9,8 +9,13 @@
 #include <map>
 #include <memory>
 #include <typeinfo>
+#include <QStringList>
+#include <QDir>
+#include <QSettings>
 
 using namespace std;
+
+const QString PLAYER_LIST_INI = "player_list.ini";
 
 enum ErrorCode
 {
@@ -148,7 +153,10 @@ public:
 
 	void print();
 
-	int init();
+	static int init();
+
+	static void savePlayList(QStringList& playList);
+	static void getPlaylist(QStringList& playList);
 
 private:
 	GlobalSingleton();

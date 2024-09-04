@@ -21,7 +21,7 @@ public:
 	explicit PlayerManager();
 	~PlayerManager();
 
-	int open_file(QString filename, WId widId);
+	int play(QStringList* playlist, QString filename, WId widId);
 	void play_stop();
 	bool playStatus_toggle();
 	void seek_forward();
@@ -31,11 +31,14 @@ public:
 		return displayPtr;
 	}
 
+signals:
+	void sigPlayNext(int index);
 
 private:
-	shared_ptr<PlayerDisplay>displayPtr;
-
-
+	shared_ptr<PlayerDisplay> displayPtr;
+	QStringList* m_strPlayList = nullptr;
+	int m_strPlayListIndex;
+	WId m_wid;
 };
 
 

@@ -229,7 +229,8 @@ public:
 	bool Display_disable = false;//是否禁用显示功能
 
 	int infinite_buffer = -1;//控制输入缓冲区行为
-	bool m_bloop = true;	//播放循环
+	bool m_bloop = false;	//播放循环
+	bool m_bplay = true;
 	int framedrop = -1;//丢帧
 	int autorotate = 1;//旋转
 

@@ -3,11 +3,12 @@
 #define __PLAYER_WIDGET_H__
 
 #include <QWidget>
-
+#include <QEvent>
+#include <type_traits>
 
 class PlayerWidget :public QWidget
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
 	explicit PlayerWidget(QWidget* parent = nullptr);
 	~PlayerWidget();

@@ -106,9 +106,9 @@ MainWindow::MainWindow(QWidget* parent /*= nullptr*/) : QWidget(parent)
 		//改变播放按钮
 		pPlayCtlWidget->setPlayIcon(false);
 		});
-	connect(pPlayManager, &PlayerManager::sigPlayNext, this, [&](int index) {
-		pPlayListWidget->setCurrentRow(index);
-		});
+	//connect(pPlayManager, &PlayerManager::sigPlayNext, this, [&](int index) {
+	//	pPlayListWidget->setCurrentRow(index);
+	//	});
 	connect(pPlayListWidget, &playerListWidget::sigOpenfile, this, [&](QString filename) {
 		QStringList* list = &(pPlayListWidget->strplaylist);
 		int ret = pPlayManager->play(list, filename, playWinId);

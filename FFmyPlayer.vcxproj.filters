@@ -49,10 +49,25 @@
     <ClCompile Include="src\playerCtlButtons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\playerCtlSlider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\playerCtlWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\playerDisplay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerListBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerListCtlButtons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\playerListWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\playerManager.cpp">
@@ -66,12 +81,6 @@
     </ClCompile>
     <ClCompile Include="src\title_bar.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\playerListWidget.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\playerCtlSlider.cpp">
-      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -612,15 +621,36 @@
     <QtMoc Include="include\playerCtlButtons.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="include\playerCtlSlider.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerCtlWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <QtMoc Include="include\playerDisplay.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerList.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerListBar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerListCtlButtons.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="include\playerListWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="include\playerManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <ClInclude Include="include\playerWidget.h">
+    <QtMoc Include="include\playerWidget.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </QtMoc>
+    <QtMoc Include="include\playingInfo.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <ClInclude Include="third\ffmpeg\include\libpostproc\postprocess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -775,19 +805,5 @@
     <None Include="english.ts">
       <Filter>Translation Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="include\playerCtlWidget.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="include\playingInfo.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="include\playerListWidget.h">
-      <Filter>Generated Files</Filter>
-    </QtMoc>
-    <QtMoc Include="include\playerCtlSlider.h">
-      <Filter>Generated Files</Filter>
-    </QtMoc>
   </ItemGroup>
 </Project>

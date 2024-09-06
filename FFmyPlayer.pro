@@ -32,8 +32,8 @@ LIBS += -L$$PWD/third/ffmpeg/lib \
         -L$$PWD/third/SDL2/lib/x64  \
         -lSDL2  \
         -L$$PWD/third/boost/lib/    \
-        -lboost_system  \
-        -lboost_filesystem
+        -llibboost_system  \
+        -llibboost_filesystem
 }
 unix {
 LIBS += \
@@ -59,8 +59,13 @@ SOURCES += \
     src/MainWindow.cpp \
     src/main.cpp \
     src/playerCtlButtons.cpp \
+    src/playerCtlSlider.cpp \
     src/playerCtlWidget.cpp \
     src/playerDisplay.cpp \
+    src/playerList.cpp \
+    src/playerListBar.cpp \
+    src/playerListCtlButtons.cpp \
+    src/playerListWidget.cpp \
     src/playerManager.cpp \
     src/playerWidget.cpp \
     src/playingInfo.cpp \
@@ -74,8 +79,13 @@ HEADERS += \
     include/configurationFile.h \
     include/dataStruct.h \
     include/playerCtlButtons.h \
+    include/playerCtlSlider.h \
     include/playerCtlWidget.h \
     include/playerDisplay.h \
+    include/playerList.h \
+    include/playerListBar.h \
+    include/playerListCtlButtons.h \
+    include/playerListWidget.h \
     include/playerManager.h \
     include/playerWidget.h \
     include/playingInfo.h \

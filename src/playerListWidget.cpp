@@ -3,56 +3,10 @@
 
 #include "StyleSheet.h"
 
-PlayListBar::PlayListBar(QWidget* parent /*= nullptr*/) : QTabBar(parent)
-{
-	//pAddTabPtr = new QPushButton(this);
-	//pAddTabPtr->setText("+ 增加专辑");
-	//pAddTabPtr->setFixedSize(tabSizeHint(0).width(), tabSizeHint(0).height());
 
-	QHBoxLayout* layout = new QHBoxLayout(this);
-	layout->addStretch();
-	layout->addWidget(pAddTabPtr);
-	this->setLayout(layout);
-}
-
-void PlayListBar::resizeEvent(QResizeEvent* event)
-{
-	QTabBar::resizeEvent(event);
-	// 调整按钮的位置，使其位于标签栏的右侧
-	//pAddTabPtr->move(width() - pAddTabPtr->width(), (height() - pAddTabPtr->height()));
-}
-
-
-void PlayListBar::paintEvent(QPaintEvent* event)
-{
-	QTabBar::paintEvent(event);
-}
 
 playerListWidget::playerListWidget(QWidget* parent /*= nullptr*/) :QTabWidget(parent)
 {
-	this->setObjectName("PlayListTabWidget");
-	this->setStyleSheet(PlayList_TabWidget_SS);
-	this->setAttribute(Qt::WA_StyledBackground, true);
-	this->setFixedWidth(320);
-
-	pTabBar = new PlayListBar();
-	pTabBar->setObjectName("PlayListTabBar");
-	this->setTabBar(pTabBar);
-
-	pListPtr = new PlayList();
-	pListPtr->setObjectName("DefaultAlbumList"); 
-	pListPtr->setStyleSheet(PlayList_ListWidget_SS);
-
-
-	QWidget* tabContent = new QWidget();
-	tabContent->setAttribute(Qt::WA_TranslucentBackground);
-	QVBoxLayout* layout = new QVBoxLayout();
-	layout->addWidget(pListPtr);
-	layout->setContentsMargins(0, 0, 0, 0);
-	tabContent->setLayout(layout);
-
-	addTab(tabContent, "默认专辑");
-
 	init();
 
 	connect(pListPtr, &PlayList::itemDoubleClicked, this, [&](QListWidgetItem* item) {
@@ -60,12 +14,18 @@ playerListWidget::playerListWidget(QWidget* parent /*= nullptr*/) :QTabWidget(pa
 		emit sigOpenfile(strPath);
 		});
 
-	connect(pListPtr, &PlayList::removeItemWidget, this, [&](QListWidgetItem* item) {
+	connect(pListPtr, &PlayList::sigItemRemoved, this, [&](QListWidgetItem* item) {
 		QString path = item->data(Qt::UserRole).toString();
 		int ret = strplaylist.indexOf(path);
 		if (ret != -1)
 			strplaylist.removeAt(ret);
 		});
+
+	connect(pCtlBtnPtr, &PlayerListCtlButtons::sigMoveTop, this, &playerListWidget::moveTop);
+	connect(pCtlBtnPtr, &PlayerListCtlButtons::sigMoveBottom, this, &playerListWidget::moveBottom);
+	connect(pCtlBtnPtr, &PlayerListCtlButtons::sigMoveUp, this, &playerListWidget::moveUp);
+	connect(pCtlBtnPtr, &PlayerListCtlButtons::sigMoveDown, this, &playerListWidget::moveDown);
+
 }
 
 
@@ -85,6 +45,33 @@ playerListWidget::~playerListWidget()
 
 void playerListWidget::init()
 {
+	this->setObjectName("PlayListTabWidget");
+	this->setStyleSheet(PlayList_TabWidget_SS);
+	this->setAttribute(Qt::WA_StyledBackground, true);
+	this->setFixedWidth(320);
+
+	pTabBar = new PlayListBar();
+	pTabBar->setObjectName("PlayListTabBar");
+	this->setTabBar(pTabBar);
+
+	pListPtr = new PlayList();
+	pListPtr->setObjectName("DefaultAlbumList");
+	pListPtr->setStyleSheet(PlayList_ListWidget_SS);
+
+	pCtlBtnPtr = new PlayerListCtlButtons();
+	pCtlBtnPtr->setObjectName("PlayListCtlButtoms");
+
+	QWidget* tabContent = new QWidget();
+	tabContent->setAttribute(Qt::WA_TranslucentBackground);
+
+	QVBoxLayout* layout = new QVBoxLayout();
+	layout->addWidget(pListPtr);
+	layout->addWidget(pCtlBtnPtr);
+	layout->setContentsMargins(0, 0, 0, 0);
+	tabContent->setLayout(layout);
+
+	addTab(tabContent, "默认专辑");
+
 	GlobalSingleton::getInstance()->getPlaylist(strplaylist);
 	for (QString filename : strplaylist)
 	{
@@ -102,49 +89,42 @@ void playerListWidget::setCurrentRow(int index)
 	
 }
 
-void PlayList::addItem(QListWidgetItem* item)
+
+
+void playerListWidget::moveTop()
 {
-	QListWidgetItem* pItem = item;
-	QString path = pItem->text();
-	if (!addUniqueItem(path))
-	{
-		QFileInfo fileInfo(path);
-		QString fileName = fileInfo.fileName();
-		pItem->setText(fileName);
-		pItem->setData(Qt::UserRole, QVariant(path));
-		QListWidget::addItem(pItem);
-		itemSet.insert(path);
-	}
-	else
-		return;
+	pListPtr->moveTop();
 }
 
-void PlayList::addItem(const QString& label)
+void playerListWidget::moveBottom()
 {
-
-	QString path = label;
-	if (!addUniqueItem(path))
-	{
-		QFileInfo fileInfo(path);
-		QString fileName = fileInfo.fileName();
-		QListWidgetItem* pItem = new QListWidgetItem(fileName);;
-		pItem->setData(Qt::UserRole, QVariant(path));
-		QListWidget::addItem(pItem);
-		itemSet.insert(path);
-	}
-	else
-		return;
+	pListPtr->moveBottom();
 }
 
-void PlayList::removeItemWidget(QListWidgetItem* item)
+void playerListWidget::moveUp()
 {
-	QListWidgetItem* pItem = item;
-	QString path = pItem->text();
-	if (addUniqueItem(path))
-	{
-		QListWidget::removeItemWidget(item);
-		itemSet.erase(path);
-	}
-	else
-		return;
+	pListPtr->moveUp();
 }
+
+void playerListWidget::moveDown()
+{
+	pListPtr->moveDown();
+}
+
+void playerListWidget::setAscendingOrder()
+{
+	pListPtr->sortItems(Qt::DescendingOrder);
+}
+
+void playerListWidget::setDescendingOrder()
+{
+	pListPtr->sortItems(Qt::AscendingOrder);
+}
+
+void playerListWidget::setSortbyType(int type)
+{
+	PlayList::sortEnum sort_type = static_cast<PlayList::sortEnum>(type);
+	pListPtr->sortListWidget(sort_type);
+}
+
+

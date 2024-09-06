@@ -9,9 +9,10 @@
 #include "title_bar.h"
 #include "playerWidget.h"
 #include "playerCtlWidget.h"
-#include "playerManager.h"
 #include "playerListWidget.h"
 #include "playerCtlSlider.h"
+#include "playerManager.h"
+
 
 class MainWindow:public QWidget
 {

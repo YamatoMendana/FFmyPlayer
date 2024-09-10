@@ -789,6 +789,12 @@
     <ClInclude Include="third\ffmpeg\include\libavcodec\xvmc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\tools\wave.cpp">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tools\wave.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
